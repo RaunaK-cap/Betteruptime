@@ -9,6 +9,7 @@ export const signup = async (req: Request, res: Response) => {
     res.json({
       message: "please enter data ",
     });
+    return;
   }
 
   const verifiedbody = signupschema.safeParse(req.body);
@@ -55,6 +56,7 @@ export const login = async (req: Request, res: Response) => {
     res.status(401).json({
       message: "Invalid data",
     });
+    return;
   }
 
   const verifiedbody = loginschema.safeParse(req.body);
@@ -67,14 +69,18 @@ export const login = async (req: Request, res: Response) => {
   const hashedPassword = Bun.hash(verifiedbody.data.password);
 
   try {
-    const result = await prisma.users.findFirst({
+    const result: any = await prisma.users.findFirst({
       where: {
         username: verifiedbody.data.username,
         password: hashedPassword.toString(),
       },
     });
 
-    if (result) {
+    if (!result) {
+      res.json({
+        message: "do data found , signup first",
+      });
+    } else {
       const token = jwt.sign(result?.id, process.env.JWT_SECRET!);
       res.status(201).json({
         message: "login successfull",
