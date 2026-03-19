@@ -4,6 +4,6 @@ import { middleware } from "../middleware/usermiddleware";
 
 const content = router();
 
-content.post("/website", middleware, website);
+content.get("/website", middleware, website);
 
 export default content;
