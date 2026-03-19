@@ -2,6 +2,7 @@ import { prisma } from "db";
 import type { Request, Response } from "express";
 import jwt, { verify } from "jsonwebtoken";
 import z from "zod";
+import { loginschema, signupschema } from "../../types";
 
 export const signup = async (req: Request, res: Response) => {
   if (!req.body) {
@@ -9,13 +10,6 @@ export const signup = async (req: Request, res: Response) => {
       message: "please enter data ",
     });
   }
-
-  const signupschema = z.object({
-    username: z.string(),
-    password: z.string(),
-    firstname: z.string(),
-    lastname: z.string(),
-  });
 
   const verifiedbody = signupschema.safeParse(req.body);
   if (!verifiedbody.success) {
@@ -62,11 +56,6 @@ export const login = async (req: Request, res: Response) => {
       message: "Invalid data",
     });
   }
-
-  const loginschema = z.object({
-    username: z.string(),
-    password: z.string(),
-  });
 
   const verifiedbody = loginschema.safeParse(req.body);
   if (!verifiedbody.success) {
