@@ -5,13 +5,6 @@ import z from "zod";
 import { loginschema, signupschema } from "../../types";
 
 export const signup = async (req: Request, res: Response) => {
-  if (!req.body) {
-    res.json({
-      message: "please enter data ",
-    });
-    return;
-  }
-
   const verifiedbody = signupschema.safeParse(req.body);
   if (!verifiedbody.success) {
     res.json({
@@ -52,13 +45,6 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-  if (!req.body) {
-    res.status(401).json({
-      message: "Invalid data",
-    });
-    return;
-  }
-
   const verifiedbody = loginschema.safeParse(req.body);
   if (!verifiedbody.success) {
     res.status(401).json({
@@ -78,14 +64,13 @@ export const login = async (req: Request, res: Response) => {
 
     if (!result) {
       res.json({
-        message: "do data found ,signup first",
+        message: "No data found ,signup first",
       });
     } else {
       const token = jwt.sign(result?.id, process.env.JWT_SECRET!);
       res.status(201).json({
         message: "login successfull",
-        token: token,=
-        id: result?.id,
+        token: token,
       });
     }
   } catch (error) {
