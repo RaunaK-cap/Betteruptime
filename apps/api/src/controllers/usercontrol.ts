@@ -78,13 +78,13 @@ export const login = async (req: Request, res: Response) => {
 
     if (!result) {
       res.json({
-        message: "do data found , signup first",
+        message: "do data found ,signup first",
       });
     } else {
       const token = jwt.sign(result?.id, process.env.JWT_SECRET!);
       res.status(201).json({
         message: "login successfull",
-        token: token,
+        token: token,=
         id: result?.id,
       });
     }

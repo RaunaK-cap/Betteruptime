@@ -11,16 +11,17 @@ export const middleware = async (
     res.json({
       message: "Enter token",
     });
+    return;
   }
   const verified = jwt.verify(token!, process.env.JWT_SECRET!);
   // console.log("decrypted jwt token:", verified);
   if (verified) {
-    //@ts-ignore
-    req.userID = verified;
+    req.userID = verified as string;
     next();
   } else {
     res.json({
       message: "unauthorized...",
     });
+    return;
   }
 };
