@@ -30,6 +30,7 @@
     "apps/producer": {
       "name": "producer",
       "dependencies": {
+        "dotenv": "^17.3.1",
         "redis": "^5.11.0",
       },
       "devDependencies": {
