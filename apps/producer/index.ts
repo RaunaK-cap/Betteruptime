@@ -1,31 +1,51 @@
 import { prisma } from "db";
 import { createClient } from "redis";
-import dotend from "dotenv";
+import dotenv from "dotenv";
 
-dotend.config();
+dotenv.config();
+
+const client = createClient().on("error", (err) =>
+  console.log("Redis Client Error", err),
+);
 
 const main = async () => {
   const websitedata: { url: string; id: number }[] =
     await prisma.website.findMany();
 
-  const client = await createClient()
-    .on("error", (err) => console.log("Redis Client Error", err))
-    .connect();
-
-  console.log("streams started");
-
   const pipeline = client.MULTI();
-  websitedata.map((data) => {
-    pipeline.xAdd("betteruptime:websitedata", "*", {
-      website: data.url,
-      id: data.id.toString(),
-    });
+
+  websitedata.forEach((data) => {
+    pipeline.xAdd(
+      "betteruptime:websitedata",
+      "*",
+      {
+        website: data.url,
+        id: data.id.toString(),
+      },
+      {
+        TRIM: {
+          strategy: "MAXLEN",
+          strategyModifier: "~",
+          threshold: 100,
+        },
+      },
+    );
   });
 
   const results = await pipeline.EXEC();
-  console.log("Generated stream entry IDs:", results);
-
-  client.destroy();
+  console.log(
+    `[${new Date().toISOString()}] Added ${results?.length} entries:`,
+    results,
+  );
 };
 
-setInterval(main, 4000);
+const start = async () => {
+  await client.connect();
+  console.log("Redis connected");
+
+  // run immediately then every 4 seconds
+  await main();
+  setInterval(main, 4000);
+};
+
+start();
