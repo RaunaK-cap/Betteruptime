@@ -1,0 +1,17 @@
+{
+  "name": "queuing-system-redis",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "db": "*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "redis": "^5.11.0"
+  }
+}

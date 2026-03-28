@@ -55,7 +55,7 @@ export const getwebsite = async (req: Request, res: Response) => {
     });
   } catch (e) {
     res.status(500).json({
-      message: "failed to get website data.",
+      message: "failed to fetch website data.",
     });
   }
 };
