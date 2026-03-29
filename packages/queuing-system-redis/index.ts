@@ -8,20 +8,15 @@ const client = createClient().on("error", (err) =>
   console.log("Redis Client Error", err),
 );
 
-const main = async () => {
-  const websitedata: { url: string; id: number }[] =
-    await prisma.website.findMany({
-      select: {
-        url: true,
-        id: true,
-      },
-    });
+const STREAM_NAME = process.env.STREAM_NAME!;
 
+export const xaddbulk = async (websitedata: { url: string; id: number }[]) => {
+  await client.connect();
   const pipeline = client.MULTI();
 
   websitedata.forEach((data) => {
     pipeline.xAdd(
-      "betteruptime:websitedata",
+      "STREAM_NAME",
       "*",
       {
         website: data.url,
@@ -43,14 +38,3 @@ const main = async () => {
     results,
   );
 };
-
-const start = async () => {
-  await client.connect();
-  console.log("Redis connected");
-
-  // run immediately then every 4 seconds
-  await main();
-  client.destroy();
-};
-
-start();
