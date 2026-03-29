@@ -1,4 +1,3 @@
-import { prisma } from "db";
 import { createClient } from "redis";
 import dotenv from "dotenv";
 import { isConstructSignatureDeclaration } from "typescript";
@@ -20,7 +19,7 @@ type messageType = {
   //@ts-ignore
 };
 
-export const xaddbulk = async (websitedata: { url: string; id: number }[]) => {
+export async function xaddbulk(websitedata: { url: string; id: number }[]) {
   await client.connect();
   const pipeline = client.MULTI();
 
@@ -47,13 +46,13 @@ export const xaddbulk = async (websitedata: { url: string; id: number }[]) => {
     `[${new Date().toISOString()}] Added ${results?.length} entries:`,
     results,
   );
-};
+}
 
 //@ts-ignore
-export const Xreadgroups = async (
+export async function Xreadgroups(
   consumergroup: string,
   workingId: string,
-): Promise<messageType[] | undefined> => {
+): Promise<messageType[] | undefined> {
   const res = await client.xReadGroup(
     consumergroup,
     workingId,
@@ -69,18 +68,18 @@ export const Xreadgroups = async (
   //@ts-ignore
   const message = res?.[0]?.message;
   return message;
-};
+}
 
-export const Xack = async (consumergroup: string, eventID: string) => {
+export async function Xack(consumergroup: string, eventID: string) {
   await client.xAck(STREAM_NAME, consumergroup, eventID);
-};
+}
 
-export const XackBulk = async (
+export async function XackBulk(
   consumergroup: string,
   eventID: string,
   eventIDs: string[],
-) => {
+) {
   eventIDs.forEach((data) => {
     Xack(consumergroup, eventID);
   });
-};
+}

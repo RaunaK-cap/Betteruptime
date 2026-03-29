@@ -7,15 +7,12 @@
     "@types/bun": "latest",
     "@types/pg": "^8.18.0"
   },
-  
   "peerDependencies": {
     "typescript": "^5"
   },
-
   "export": {
-    "./db":"index.ts"
+    "./db": "index.ts"
   },
-
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",

@@ -7,6 +7,9 @@
     "@types/bun": "latest",
     "db": "*"
   },
+  "export": {
+    "./queuing-system-redis": "index.ts"
+  },
   "peerDependencies": {
     "typescript": "^5"
   },

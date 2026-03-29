@@ -38,6 +38,7 @@
       },
       "peerDependencies": {
         "db": "*",
+        "queuing-system-redis": "*",
         "typescript": "^5",
       },
     },

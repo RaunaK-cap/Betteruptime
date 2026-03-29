@@ -8,7 +8,8 @@
   },
   "peerDependencies": {
     "typescript": "^5",
-    "db": "*"
+    "db": "*",
+    "queuing-system-redis": "*"
   },
   "dependencies": {
     "dotenv": "^17.3.1",
