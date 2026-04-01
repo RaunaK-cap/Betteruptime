@@ -12,9 +12,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Better Uptime",
+  title: "Better Uptime | SaaS Monitoring Landing Page",
   description:
-    "Regional uptime monitoring and website diagnostics for modern teams.",
+    "A polished SaaS landing page for Better Uptime with uptime monitoring, incident response, and status page messaging.",
 };
 
 export default function RootLayout({
