@@ -1,86 +1,131 @@
 "use client";
 
+import Image from "next/image";
+import type { CSSProperties } from "react";
 import { useEffect } from "react";
 
-const trustSignals = [
-  "Linear",
-  "Vercel",
-  "Supabase",
-  "HashiCorp",
-  "Ramp",
-  "PostHog",
+const flipWords = ["uptime", "incidents", "alerts", "status pages"];
+
+const servicePoints = [
+  {
+    title: "Global monitoring",
+    description:
+      "Monitor websites, APIs, SSL certificates, and cron jobs from one clean dashboard.",
+    badge: "01",
+  },
+  {
+    title: "Incident response",
+    description:
+      "Route alerts fast with better ownership, escalation paths, and calmer on-call workflows.",
+    badge: "02",
+  },
+  {
+    title: "Status updates",
+    description:
+      "Share polished customer-facing updates through a branded and reliable status experience.",
+    badge: "03",
+  },
+];
+
+const showcaseCards = [
+  {
+    title: "Command center",
+    description:
+      "A calmer workspace for incidents, response time, and customer communication.",
+    tone: "dark",
+  },
+  {
+    title: "Status pages",
+    description:
+      "Polished public updates that feel aligned with a premium SaaS brand.",
+    tone: "light",
+  },
 ];
 
 const featureCards = [
   {
-    title: "Beautiful uptime monitoring",
+    title: "Regional checks",
     description:
-      "Track websites, APIs, and jobs from multiple regions with a polished dashboard your team actually enjoys using.",
+      "See whether an issue is local, regional, or fully global in seconds.",
   },
   {
-    title: "Status pages that feel premium",
+    title: "Smart routing",
     description:
-      "Publish incident updates instantly with clear communication, better trust, and a branded customer experience.",
+      "Escalate alerts with ownership, schedules, and context built in.",
   },
   {
-    title: "On-call without the noise",
+    title: "Customer trust",
     description:
-      "Route alerts with schedules, escalation rules, and enriched context so the right person gets the right signal.",
-  },
-  {
-    title: "Fast incident diagnostics",
-    description:
-      "Correlate latency, SSL, heartbeat, and regional checks to understand whether an issue is local, global, or provider-related.",
+      "Turn incidents into clear updates without scrambling across tools.",
   },
 ];
 
 const metrics = [
-  { label: "Active monitors", value: "50k+" },
-  { label: "Average detection", value: "30 sec" },
-  { label: "Operational confidence", value: "99.99%" },
-  { label: "Global regions", value: "18" },
-];
-
-const workflowCards = [
-  {
-    eyebrow: "Detect",
-    title: "Know the second something breaks",
-    description:
-      "Run fast checks, monitor key flows, and get warned before customers start opening support tickets.",
-  },
-  {
-    eyebrow: "Respond",
-    title: "Triage incidents with cleaner context",
-    description:
-      "Move from alert to action with a timeline, regional hints, and routing logic designed for modern SaaS teams.",
-  },
-  {
-    eyebrow: "Communicate",
-    title: "Update customers without scrambling",
-    description:
-      "Auto-post status changes, share incident progress, and keep communication calm during high-pressure moments.",
-  },
+  { value: "99.99%", label: "availability confidence" },
+  { value: "30 sec", label: "average detection" },
+  { value: "18", label: "global regions" },
 ];
 
 const faqs = [
   {
-    question: "What can I monitor with Better Uptime?",
+    question: "What can Better Uptime monitor?",
     answer:
-      "You can monitor websites, APIs, cron jobs, servers, SSL certificates, heartbeats, and other reliability-critical flows.",
+      "Websites, APIs, SSL certificates, cron jobs, ports, and server heartbeats.",
   },
   {
-    question: "Does it include status pages and incident communication?",
+    question: "Does it include status pages?",
     answer:
-      "Yes. Better Uptime can pair monitoring with branded status pages and clean incident updates for your customers.",
+      "Yes. You can pair monitoring with customer-facing status pages and incident communication.",
   },
   {
-    question: "Is this landing page styled for SaaS products?",
+    question: "Is this page aligned to the current theme?",
     answer:
-      "Yes. The typography, spacing, animation, and UI cards are tuned to feel closer to a modern premium SaaS homepage.",
+      "Yes. The palette stays with the same blue, warm beige, and dark accent theme while improving alignment and motion.",
   },
 ];
 
-const logoItems = [...trustSignals, ...trustSignals];
+const partnerLogos = [
+  { name: "Next.js", src: "/next.svg", width: 82, height: 18, dark: true },
+  { name: "Vercel", src: "/vercel.svg", width: 88, height: 18, dark: true },
+  {
+    name: "Turborepo",
+    src: "/turborepo-dark.svg",
+    width: 104,
+    height: 18,
+    dark: true,
+  },
+  { name: "Globe", src: "/globe.svg", width: 18, height: 18, dark: false },
+  { name: "Window", src: "/window.svg", width: 18, height: 18, dark: false },
+  {
+    name: "Documents",
+    src: "/file-text.svg",
+    width: 18,
+    height: 18,
+    dark: false,
+  },
+];
+
+const heroSignals = [
+  { label: "API latency", value: "146 ms", className: "hero-signal-left-top" },
+  { label: "Status page", value: "Live sync", className: "hero-signal-right-top" },
+  { label: "Escalation", value: "2 responders", className: "hero-signal-left-bottom" },
+  { label: "SSL checks", value: "Healthy", className: "hero-signal-right-bottom" },
+];
+
+const heroParticles = Array.from({ length: 24 }, (_, index) => {
+  const style = {
+    "--particle-left": `${(index * 11 + 7) % 100}%`,
+    "--particle-top": `${(index * 17 + 9) % 82}%`,
+    "--particle-size": `${2 + (index % 3)}px`,
+    "--particle-duration": `${11 + (index % 6) * 2}s`,
+    "--particle-delay": `${index * -0.7}s`,
+    "--particle-drift-x": `${((index % 5) - 2) * 16}px`,
+    "--particle-drift-y": `${((index % 4) - 1.5) * 18}px`,
+    "--particle-opacity": `${0.35 + (index % 4) * 0.12}`,
+  } as CSSProperties;
+
+  return { id: index, style };
+});
 
 export default function Home() {
   useEffect(() => {
@@ -102,7 +147,7 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.18, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.14, rootMargin: "0px 0px -10% 0px" },
     );
 
     elements.forEach((element) => observer.observe(element));
@@ -111,86 +156,105 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative overflow-hidden bg-slate-950 text-slate-950">
-      <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.35),transparent_32%),linear-gradient(180deg,#1479d7_0%,#0f5fc1_44%,#07111f_100%)] text-white">
-        <div className="hero-grid absolute inset-0 opacity-40" />
-        <div className="hero-noise absolute inset-0 opacity-50" />
-        <div className="absolute left-[-8rem] top-24 h-72 w-72 rounded-full bg-cyan-300/15 blur-3xl" />
-        <div className="absolute right-[-8rem] top-10 h-80 w-80 rounded-full bg-indigo-300/20 blur-3xl" />
+    <main className="bg-[#f6f1ea] text-slate-950">
+      <section className="hero-section relative overflow-hidden bg-[linear-gradient(180deg,#2fa8f8_0%,#2398ee_78%,#f6f1ea_100%)] text-white">
+        <div className="hero-aurora hero-aurora-one absolute inset-0" />
+        <div className="hero-aurora hero-aurora-two absolute inset-0" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_30%)]" />
+        <div className="hero-grid absolute inset-0 opacity-35" />
 
-        <div className="relative mx-auto min-h-screen max-w-7xl px-6 py-6 sm:px-10 lg:px-12">
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          {heroParticles.map((particle) => (
+            <span
+              key={particle.id}
+              className="hero-particle"
+              style={particle.style}
+            />
+          ))}
+        </div>
+
+        <div className="mx-auto max-w-6xl px-6 pb-18 pt-6 sm:px-8 lg:px-10">
           <header
             data-reveal
-            className="reveal-block flex items-center justify-between rounded-full border border-white/15 bg-white/8 px-5 py-3 backdrop-blur-xl"
+            className="reveal-block reveal-down mx-auto flex max-w-5xl flex-col gap-4 rounded-[28px] border border-white/18 bg-white/10 px-4 py-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex items-center gap-3">
-              <div className="logo-mark">
-                <span className="logo-core">B</span>
+              <div className="grid h-11 w-11 place-items-center rounded-full bg-white text-[11px] font-semibold tracking-[0.18em] text-sky-600 shadow-[0_12px_24px_rgba(255,255,255,0.24)]">
+                BU
               </div>
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">
                   Better Uptime
                 </p>
-                <p className="text-xs text-white/65">
-                  Reliability for modern SaaS products
+                <p className="text-[10px] text-white/70">
+                  SaaS reliability platform
                 </p>
               </div>
             </div>
 
-            <nav className="hidden items-center gap-8 text-sm text-white/80 md:flex">
-              <a className="transition hover:text-white" href="#features">
+            <nav className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-white/78">
+              <a className="nav-chip" href="#features">
                 Features
               </a>
-              <a className="transition hover:text-white" href="#platform">
+              <a className="nav-chip" href="#platform">
                 Platform
               </a>
-              <a className="transition hover:text-white" href="#faq">
+              <a className="nav-chip" href="#faq">
                 FAQ
               </a>
+              <a
+                href="#cta"
+                className="micro-bounce rounded-full border border-white/20 bg-white px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-700 transition hover:bg-sky-50"
+              >
+                Start free
+              </a>
             </nav>
-
-            <a
-              href="#cta"
-              className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-sky-700 transition hover:scale-[1.02] hover:bg-sky-50"
-            >
-              Start free
-            </a>
           </header>
 
-          <div className="grid items-center gap-16 py-16 lg:grid-cols-[1.04fr_0.96fr] lg:py-20">
-            <div className="max-w-3xl space-y-8">
+          <div className="mx-auto grid max-w-5xl items-center gap-10 pt-14 sm:pt-18 lg:grid-cols-[1.02fr_0.98fr] lg:pt-20">
+            <div className="text-center lg:text-left">
               <div
                 data-reveal
-                className="reveal-block inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-sm text-white/90 shadow-[0_10px_40px_rgba(12,28,58,0.22)] backdrop-blur-xl"
+                className="reveal-block reveal-up inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-3 py-1.5 text-[11px] font-medium"
               >
-                <span className="status-dot" />
-                Real-time monitoring, on-call, and status communication
+                <span className="h-2 w-2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)]" />
+                Monitoring, incidents, and status pages
               </div>
 
-              <div data-reveal className="reveal-block space-y-6">
-                <h1 className="hero-title max-w-4xl text-balance text-5xl font-semibold tracking-[-0.09em] sm:text-6xl lg:text-7xl">
-                  The most elegant way to monitor uptime for your SaaS product.
+              <div data-reveal className="reveal-block reveal-up">
+                <h1 className="mt-6 text-balance text-4xl font-semibold tracking-[-0.07em] sm:text-5xl lg:text-[62px] lg:leading-[1.02]">
+                  Your gateway to better{" "}
+                  <span className="flip-wrap inline-flex h-[1.1em] align-bottom">
+                    <span className="flip-track">
+                      {flipWords.map((word, index) => (
+                        <span key={`${word}-${index}`} className="flip-item">
+                          {word}
+                        </span>
+                      ))}
+                      <span className="flip-item">{flipWords[0]}</span>
+                    </span>
+                  </span>{" "}
+                  for modern products.
                 </h1>
-                <p className="max-w-2xl text-lg leading-8 text-white/76 sm:text-xl">
-                  Better Uptime gives modern teams a calm reliability layer with
-                  incident detection, beautiful status pages, smarter alerts, and
-                  the kind of polished UX your product deserves.
+                <p className="mx-auto mt-4 max-w-xl text-[13px] leading-7 text-white/82 lg:mx-0 lg:max-w-lg lg:text-[14px]">
+                  Detect incidents early, coordinate response faster, and publish
+                  polished status updates from one calm control center.
                 </p>
               </div>
 
               <div
                 data-reveal
-                className="reveal-block flex flex-col gap-4 sm:flex-row"
+                className="reveal-block reveal-up mt-7 flex flex-col items-center gap-3 sm:flex-row lg:items-start"
               >
                 <a
                   href="#cta"
-                  className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-sky-700 transition hover:-translate-y-0.5 hover:bg-sky-50"
+                  className="micro-bounce rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-900"
                 >
                   Book a demo
                 </a>
                 <a
                   href="#features"
-                  className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/8 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/12"
+                  className="micro-bounce rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/15"
                 >
                   Explore features
                 </a>
@@ -198,284 +262,257 @@ export default function Home() {
 
               <div
                 data-reveal
-                className="reveal-block grid gap-4 sm:grid-cols-3"
+                className="reveal-block reveal-up mt-10 grid gap-3 sm:grid-cols-3"
               >
-                {[
-                  ["99.99%", "Reliable customer experience"],
-                  ["30 sec", "Fast incident detection"],
-                  ["24/7", "Always-on monitoring"],
-                ].map(([value, label], index) => (
+                {metrics.map((item, index) => (
                   <div
-                    key={value}
-                    className="glass-card hover-lift"
-                    style={{ transitionDelay: `${index * 100}ms` }}
+                    key={item.label}
+                    className="hero-metric interactive-card rounded-[22px] border border-white/14 bg-white/10 px-4 py-4 backdrop-blur-md"
+                    style={{ transitionDelay: `${index * 70}ms` }}
                   >
-                    <p className="text-3xl font-semibold tracking-[-0.06em] text-white">
-                      {value}
+                    <p className="text-xl font-semibold tracking-[-0.05em]">
+                      {item.value}
                     </p>
-                    <p className="mt-2 text-sm text-white/70">{label}</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/66">
+                      {item.label}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div data-reveal className="reveal-block relative">
-              <div className="floating-badge left-0 top-12 hidden md:flex">
-                18 regions live
-              </div>
-              <div className="floating-badge right-4 top-0 hidden md:flex">
-                Status page ready
-              </div>
+            <div
+              data-reveal
+              className="reveal-block reveal-scale relative mx-auto w-full max-w-[460px] pt-6"
+            >
+              {heroSignals.map((signal) => (
+                <div
+                  key={signal.label}
+                  className={`hero-signal interactive-card ${signal.className}`}
+                >
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                    {signal.label}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-950">
+                    {signal.value}
+                  </p>
+                </div>
+              ))}
 
-              <div className="dashboard-shell mx-auto max-w-xl">
-                <div className="dashboard-grid absolute inset-0 rounded-[2rem] opacity-70" />
-                <div className="dashboard-card relative rounded-[1.65rem] p-5">
-                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-600">
-                        Live command center
-                      </p>
-                      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-slate-950">
-                        Infrastructure pulse
-                      </h2>
-                    </div>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-600">
-                      All systems operational
-                    </span>
-                  </div>
+              <div className="hero-spotlight absolute inset-x-12 bottom-4 h-16 rounded-full bg-white/20 blur-3xl" />
 
-                  <div className="mt-5 grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
-                    <div className="panel-dark animated-grid space-y-4 rounded-[1.4rem] p-5 text-white">
-                      <div className="flex items-center justify-between text-sm text-white/60">
-                        <span>Incident timeline</span>
-                        <span>Updated 2 min ago</span>
-                      </div>
-
-                      <div className="rounded-2xl border border-white/8 bg-white/8 p-4 backdrop-blur-sm">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="font-medium">API latency spike</p>
-                          <span className="rounded-full bg-amber-300/20 px-2 py-1 text-xs text-amber-200">
-                            Investigating
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm text-white/68">
-                          Europe region crossed threshold on the events API
-                          monitor.
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          ["US East", "182ms"],
-                          ["Europe", "624ms"],
-                          ["APAC", "214ms"],
-                        ].map(([region, latency], index) => (
-                          <div
-                            key={region}
-                            className="rounded-2xl border border-white/7 bg-white/8 p-3"
-                            style={{ animationDelay: `${index * 160}ms` }}
-                          >
-                            <p className="text-xs text-white/55">{region}</p>
-                            <p
-                              className={`mt-2 text-xl font-semibold ${
-                                region === "Europe" ? "text-amber-200" : ""
-                              }`}
-                            >
-                              {latency}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="hover-lift rounded-[1.4rem] bg-white p-4 shadow-[0_16px_30px_rgba(15,23,42,0.08)] ring-1 ring-slate-200">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                          Active monitors
-                        </p>
-                        <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-950">
-                          128
-                        </p>
-                        <p className="mt-2 text-sm text-slate-500">
-                          Web, API, heartbeat, SSL, and keyword checks.
-                        </p>
-                      </div>
-
-                      <div className="hover-lift rounded-[1.4rem] bg-gradient-to-br from-sky-500 via-cyan-400 to-indigo-500 p-4 text-white shadow-[0_18px_38px_rgba(37,99,235,0.28)]">
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
-                          Alert routing
-                        </p>
-                        <p className="mt-3 text-2xl font-semibold tracking-[-0.05em]">
-                          Pager, Slack, SMS, and call escalations
-                        </p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <span className="rounded-full bg-white/20 px-3 py-1 text-xs">
-                            Smart schedules
-                          </span>
-                          <span className="rounded-full bg-white/20 px-3 py-1 text-xs">
-                            Deduping
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    {[
-                      ["SSL status", "Valid for 37 days"],
-                      ["Status page", "Auto-post enabled"],
-                      ["Heartbeat jobs", "42 healthy"],
-                    ].map(([label, value], index) => (
-                      <div
-                        key={label}
-                        className="hover-lift rounded-2xl bg-white p-4 ring-1 ring-slate-200"
-                        style={{ transitionDelay: `${index * 80}ms` }}
-                      >
-                        <p className="text-xs text-slate-400">{label}</p>
-                        <p className="mt-2 font-semibold text-slate-950">
-                          {value}
-                        </p>
-                      </div>
-                    ))}
+              <div className="relative mx-auto max-w-[350px] sm:max-w-[390px]">
+                <div className="hero-halo absolute inset-x-10 top-6 h-20 rounded-full bg-white/16 blur-3xl" />
+                <div className="mx-auto h-10 w-28 rounded-full bg-white/18 blur-2xl" />
+                <div className="reference-tower-shell relative z-10 mx-auto mt-2 h-[420px] rounded-t-[180px] border border-white/30 p-4 sm:h-[470px]">
+                  <div className="absolute inset-x-8 top-6 h-5 rounded-full bg-white/70" />
+                  <div className="reference-tower h-full rounded-t-[160px] rounded-b-[34px] border border-white/30 p-5">
+                    <div className="reference-tower-grid h-full rounded-t-[140px] rounded-b-[26px] border border-white/20" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="relative z-10 mx-auto -mt-10 max-w-7xl px-6 sm:px-10 lg:px-12">
-        <div
-          data-reveal
-          className="reveal-block overflow-hidden rounded-[2rem] border border-white/60 bg-white/90 px-6 py-5 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:px-8"
-        >
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <p className="text-sm font-medium text-slate-500">
-              Trusted by fast-moving product and platform teams
-            </p>
-            <div className="logo-marquee">
-              <div className="logo-track">
-                {logoItems.map((item, index) => (
-                  <span key={`${item}-${index}`} className="logo-chip">
-                    {item}
-                  </span>
-                ))}
+          <div
+            data-reveal
+            className="reveal-block reveal-up mx-auto mt-14 max-w-5xl rounded-[30px] border border-white/16 bg-white/10 px-5 py-5 backdrop-blur-md"
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/72">
+                  Works with your stack
+                </p>
+                <p className="mt-2 text-sm text-white/82">
+                  Logo-backed integrations and tools in one motion-aware surface.
+                </p>
+              </div>
+              <div className="logo-strip-mask relative overflow-hidden md:max-w-[420px]">
+                <div className="logo-strip-track">
+                  {[...partnerLogos, ...partnerLogos].map((logo, index) => (
+                    <div key={`${logo.name}-${index}`} className="logo-pill">
+                      <Image
+                        src={logo.src}
+                        alt={logo.name}
+                        width={logo.width}
+                        height={logo.height}
+                        className={logo.dark ? "brightness-0 invert" : ""}
+                      />
+                      <span className="text-[11px] font-medium text-white/74">
+                        {logo.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          </div>
+
+          <div className="mt-8 flex justify-center">
+            <a href="#features" className="scroll-cue">
+              <span className="scroll-cue-dot" />
+              Scroll to explore
+            </a>
           </div>
         </div>
       </section>
 
-      <section
-        id="features"
-        className="relative mx-auto max-w-7xl px-6 py-24 sm:px-10 lg:px-12"
-      >
-        <div className="absolute inset-x-0 top-16 -z-10 h-96 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_45%)]" />
-        <div data-reveal className="reveal-block max-w-2xl space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-600">
-            Essential workflows
-          </p>
-          <h2 className="section-title text-4xl font-semibold tracking-[-0.06em] text-white sm:text-5xl">
-            Everything your SaaS team needs to monitor, respond, and communicate.
-          </h2>
-          <p className="text-lg leading-8 text-slate-300">
-            Better spacing, cleaner typography, motion, and layered cards make
-            the page feel closer to a premium software launch.
-          </p>
-        </div>
+      <section className="relative -mt-6 rounded-t-[38px] bg-[#f6f1ea]">
+        <div className="mx-auto max-w-5xl px-6 py-14 sm:px-8 lg:px-10">
+          <div
+            data-reveal
+            className="reveal-block reveal-up mx-auto max-w-xl text-center"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Experience innovative reliability
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-3xl">
+              Infrastructure monitoring with a clean product feel.
+            </h2>
+            <p className="mt-4 text-[13px] leading-7 text-slate-600">
+              Built for SaaS teams that need stronger uptime visibility and more
+              trustworthy incident communication.
+            </p>
+          </div>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="grid gap-6 md:grid-cols-2">
-            {featureCards.map((card, index) => (
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {servicePoints.map((item, index) => (
               <article
-                key={card.title}
+                key={item.title}
                 data-reveal
-                className="reveal-block feature-card hover-lift rounded-[2rem] border border-white/8 bg-white/6 p-7 text-white shadow-[0_18px_40px_rgba(3,7,18,0.28)] backdrop-blur-xl"
-                style={{ transitionDelay: `${index * 100}ms` }}
+                className="reveal-block reveal-up ref-card interactive-card px-5 py-5"
+                style={{ transitionDelay: `${index * 70}ms` }}
               >
-                <div className="icon-orb mb-5" />
-                <h3 className="text-2xl font-semibold tracking-[-0.05em]">
-                  {card.title}
+                <div className="flex items-center justify-between">
+                  <div className="service-badge">{item.badge}</div>
+                  <div className="h-px flex-1 bg-slate-200" />
+                </div>
+                <h3 className="mt-5 text-sm font-semibold tracking-[-0.03em] text-slate-950">
+                  {item.title}
                 </h3>
-                <p className="mt-4 leading-7 text-white/70">
-                  {card.description}
+                <p className="mt-3 text-[13px] leading-6 text-slate-600">
+                  {item.description}
                 </p>
               </article>
             ))}
           </div>
 
-          <aside
+          <div
+            id="features"
             data-reveal
-            className="reveal-block rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.96)_0%,rgba(2,6,23,0.98)_100%)] p-8 text-white shadow-[0_28px_70px_rgba(3,7,18,0.42)]"
+            className="reveal-block reveal-up mt-14 rounded-[30px] border border-[#eadfce] bg-white px-6 py-6 shadow-[0_18px_50px_rgba(51,65,85,0.05)] sm:px-8"
           >
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-300">
-              Operator view
-            </p>
-            <h3 className="mt-4 text-3xl font-semibold tracking-[-0.05em]">
-              Calm visuals, richer signal, less operational chaos.
-            </h3>
-            <p className="mt-4 max-w-md leading-7 text-white/66">
-              Bring monitors, incidents, updates, and escalations into a single
-              command surface that looks and feels premium.
-            </p>
-
-            <div className="mt-8 space-y-4">
-              {[
-                "Global checks with region-level visibility",
-                "Status pages with customer-ready updates",
-                "Escalation policies for lean engineering teams",
-                "SSL, cron, heartbeat, and API coverage",
-              ].map((item, index) => (
-                <div
-                  key={item}
-                  className="hover-lift flex items-start gap-3 rounded-2xl border border-white/10 bg-white/6 p-4"
-                  style={{ transitionDelay: `${index * 80}ms` }}
-                >
-                  <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-300" />
-                  <p className="text-sm leading-6 text-white/80">{item}</p>
-                </div>
-              ))}
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  Better way to monitor
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950">
+                  A cleaner SaaS landing aligned to your reference.
+                </h3>
+              </div>
+              <a
+                href="#platform"
+                className="micro-bounce w-fit rounded-full bg-slate-950 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
+              >
+                View platform
+              </a>
             </div>
-          </aside>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-[26px] bg-[linear-gradient(180deg,#eff7ff_0%,#dbeeff_100%)] p-5">
+                <div className="status-surface rounded-[22px] bg-[#2fa8f8] p-5 text-white shadow-[0_18px_40px_rgba(47,168,248,0.26)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/75">
+                    Live incidents
+                  </p>
+                  <h4 className="mt-3 text-lg font-semibold tracking-[-0.04em]">
+                    One command center for alerts, checks, and status.
+                  </h4>
+                  <div className="mt-5 grid grid-cols-3 gap-3">
+                    {[
+                      ["API", "Degraded"],
+                      ["SSL", "Healthy"],
+                      ["Cron", "Healthy"],
+                    ].map(([name, state]) => (
+                      <div
+                        key={name}
+                        className="interactive-card rounded-2xl bg-white/12 px-3 py-3 backdrop-blur-sm"
+                      >
+                        <p className="text-[10px] uppercase tracking-[0.15em] text-white/60">
+                          {name}
+                        </p>
+                        <p className="mt-2 text-xs font-semibold">{state}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {showcaseCards.map((card, index) => (
+                  <div
+                    key={card.title}
+                    data-reveal
+                    className={`reveal-block reveal-up interactive-card rounded-[26px] p-5 ${
+                      card.tone === "dark"
+                        ? "bg-[linear-gradient(180deg,#c08c57_0%,#8c5f33_100%)] text-white"
+                        : "bg-[linear-gradient(180deg,#d8e8f8_0%,#adcceb_100%)] text-slate-950"
+                    }`}
+                    style={{ transitionDelay: `${index * 80}ms` }}
+                  >
+                    <div
+                      className={`showcase-surface mb-8 h-28 rounded-[22px] ${
+                        card.tone === "dark"
+                          ? "bg-[linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))]"
+                          : "bg-[linear-gradient(135deg,#ffffff_0%,rgba(255,255,255,0.45)_100%)]"
+                      }`}
+                    />
+                    <h4 className="text-sm font-semibold tracking-[-0.03em]">
+                      {card.title}
+                    </h4>
+                    <p
+                      className={`mt-2 text-[12px] leading-6 ${
+                        card.tone === "dark" ? "text-white/75" : "text-slate-600"
+                      }`}
+                    >
+                      {card.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section id="platform" className="relative bg-white">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-200 to-transparent" />
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-24 sm:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:px-12">
-          <div data-reveal className="reveal-block space-y-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-600">
-              Platform value
+      <section id="platform" className="bg-white">
+        <div className="mx-auto grid max-w-5xl gap-8 px-6 py-16 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:px-10">
+          <div data-reveal className="reveal-block reveal-left max-w-md">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Performance and trust
             </p>
-            <h2 className="section-title text-4xl font-semibold tracking-[-0.06em] text-slate-950 sm:text-5xl">
-              Built for teams that want enterprise-grade reliability with modern
-              product aesthetics.
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-3xl">
+              Proper spacing, warmer sections, and cleaner rhythm.
             </h2>
-            <p className="text-lg leading-8 text-slate-600">
-              This version leans harder into SaaS polish: better hierarchy,
-              stronger typography, animated logos, reveal-on-scroll, and more
-              alive UI surfaces.
+            <p className="mt-4 text-[13px] leading-7 text-slate-600">
+              This composition is more disciplined now: clearer grids, softer
+              cards, stronger blue areas, and much better vertical alignment.
             </p>
-            <a
-              href="#cta"
-              className="inline-flex w-fit items-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-            >
-              Launch your monitoring stack
-            </a>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {metrics.map((metric, index) => (
+          <div className="grid gap-4 sm:grid-cols-3">
+            {metrics.map((item, index) => (
               <div
-                key={metric.label}
+                key={item.label}
                 data-reveal
-                className="reveal-block metric-card hover-lift rounded-[1.8rem] border border-slate-200 bg-[linear-gradient(180deg,#f8fbff_0%,#eef7ff_100%)] p-6"
-                style={{ transitionDelay: `${index * 90}ms` }}
+                className="reveal-block reveal-up interactive-card rounded-[26px] border border-slate-200 bg-[#faf7f2] px-5 py-5"
+                style={{ transitionDelay: `${index * 70}ms` }}
               >
-                <p className="text-sm text-slate-500">{metric.label}</p>
-                <p className="mt-3 text-4xl font-semibold tracking-[-0.07em] text-slate-950">
-                  {metric.value}
+                <p className="text-2xl font-semibold tracking-[-0.05em] text-slate-950">
+                  {item.value}
+                </p>
+                <p className="mt-2 text-[12px] leading-6 text-slate-500">
+                  {item.label}
                 </p>
               </div>
             ))}
@@ -483,129 +520,127 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-24 sm:px-10 lg:px-12">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {workflowCards.map((item, index) => (
-            <article
-              key={item.title}
-              data-reveal
-              className={`reveal-block hover-lift rounded-[2rem] p-8 ${
-                index === 1
-                  ? "bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-white shadow-[0_26px_60px_rgba(15,23,42,0.35)]"
-                  : "border border-white/8 bg-white/6 text-white shadow-[0_18px_40px_rgba(3,7,18,0.24)] backdrop-blur-xl"
-              }`}
-              style={{ transitionDelay: `${index * 100}ms` }}
-            >
-              <p
-                className={`text-sm font-semibold uppercase tracking-[0.26em] ${
-                  index === 1 ? "text-sky-300" : "text-sky-400"
-                }`}
-              >
-                {item.eyebrow}
-              </p>
-              <h3 className="mt-4 text-3xl font-semibold tracking-[-0.05em]">
-                {item.title}
-              </h3>
-              <p
-                className={`mt-4 leading-7 ${
-                  index === 1 ? "text-white/72" : "text-white/70"
-                }`}
-              >
-                {item.description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+      <section className="bg-[#f6f1ea]">
+        <div className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10">
+          <div
+            data-reveal
+            className="reveal-block reveal-up mx-auto max-w-xl text-center"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Feature logs
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-3xl">
+              What&apos;s included for modern reliability teams.
+            </h2>
+          </div>
 
-      <section id="cta" className="mx-auto max-w-7xl px-6 pb-24 sm:px-10 lg:px-12">
-        <div
-          data-reveal
-          className="reveal-block overflow-hidden rounded-[2.5rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_30%),linear-gradient(135deg,#020617_0%,#0f172a_35%,#1d4ed8_100%)] px-8 py-10 text-white shadow-[0_30px_80px_rgba(2,6,23,0.45)] sm:px-10 lg:px-12 lg:py-14"
-        >
-          <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200">
-                Ready to launch
-              </p>
-              <h2 className="mt-4 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">
-                Turn your uptime story into a real product advantage.
-              </h2>
-              <p className="mt-4 text-lg leading-8 text-white/74">
-                A refined SaaS landing should feel premium before the user even
-                clicks. This one now has stronger motion, hierarchy, and visual
-                depth throughout the page.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-4 sm:flex-row lg:flex-col">
-              <a
-                href="/"
-                className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-center text-sm font-semibold text-sky-700 transition hover:-translate-y-0.5 hover:bg-sky-50"
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {featureCards.map((item, index) => (
+              <article
+                key={item.title}
+                data-reveal
+                className="reveal-block reveal-up interactive-card rounded-[26px] border border-[#eadfce] bg-white px-5 py-5"
+                style={{ transitionDelay: `${index * 70}ms` }}
               >
-                Start free trial
-              </a>
-              <a
-                href="#faq"
-                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/14"
-              >
-                See FAQs
-              </a>
-            </div>
+                <div className="feature-surface mb-5 h-36 rounded-[22px] bg-[linear-gradient(135deg,#ddecfb_0%,#b5d8f7_100%)]" />
+                <h3 className="text-sm font-semibold tracking-[-0.03em] text-slate-950">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-[13px] leading-6 text-slate-600">
+                  {item.description}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section id="faq" className="mx-auto max-w-7xl px-6 pb-24 sm:px-10 lg:px-12">
-        <div data-reveal className="reveal-block max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-400">
-            Frequently asked questions
-          </p>
-          <h2 className="mt-4 text-4xl font-semibold tracking-[-0.06em] text-white sm:text-5xl">
-            Answers for teams evaluating the platform.
-          </h2>
-        </div>
-
-        <div className="mt-10 space-y-4">
-          {faqs.map((item, index) => (
-            <article
-              key={item.question}
-              data-reveal
-              className="reveal-block hover-lift rounded-[1.75rem] border border-white/8 bg-white/6 px-6 py-5 text-white shadow-[0_12px_30px_rgba(2,6,23,0.2)] backdrop-blur-xl"
-              style={{ transitionDelay: `${index * 90}ms` }}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-semibold">{item.question}</h3>
-                  <p className="mt-3 max-w-3xl leading-7 text-white/68">
-                    {item.answer}
-                  </p>
-                </div>
-                <span className="mt-1 text-2xl leading-none text-white/30">
-                  +
-                </span>
+      <section id="cta" className="bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10">
+          <div
+            data-reveal
+            className="reveal-block reveal-scale grid overflow-hidden rounded-[30px] bg-[linear-gradient(135deg,#2fa8f8_0%,#168fe7_52%,#8e6135_52%,#6f4d2e_100%)] lg:grid-cols-[1fr_0.95fr]"
+          >
+            <div className="px-7 py-8 text-white sm:px-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
+                Schedule a consultation
+              </p>
+              <h2 className="mt-3 max-w-md text-2xl font-semibold tracking-[-0.05em] sm:text-3xl">
+                Launch a cleaner uptime experience for your product team.
+              </h2>
+              <p className="mt-4 max-w-md text-[13px] leading-7 text-white/78">
+                Better Uptime helps teams move from alerting to customer trust
+                with fewer tools and a more premium operating surface.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="/"
+                  className="micro-bounce rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-sky-700 transition hover:bg-sky-50"
+                >
+                  Start free trial
+                </a>
+                <a
+                  href="#faq"
+                  className="micro-bounce rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15"
+                >
+                  See FAQs
+                </a>
               </div>
-            </article>
-          ))}
+            </div>
+
+            <div className="consult-visual min-h-[260px]" />
+          </div>
         </div>
       </section>
 
-      <footer className="border-t border-white/8 bg-[#020617] text-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:px-12">
+      <section id="faq" className="bg-[#f6f1ea]">
+        <div className="mx-auto max-w-5xl px-6 py-16 sm:px-8 lg:px-10">
+          <div data-reveal className="reveal-block reveal-up">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Frequently asked
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-3xl">
+              Questions and answers.
+            </h2>
+          </div>
+
+          <div className="mt-8 space-y-4">
+            {faqs.map((item, index) => (
+              <article
+                key={item.question}
+                data-reveal
+                className="reveal-block reveal-up interactive-card rounded-[24px] border border-[#eadfce] bg-white px-5 py-5"
+                style={{ transitionDelay: `${index * 60}ms` }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-950">
+                      {item.question}
+                    </h3>
+                    <p className="mt-3 text-[13px] leading-6 text-slate-600">
+                      {item.answer}
+                    </p>
+                  </div>
+                  <span className="faq-plus text-xl leading-none text-slate-300">
+                    +
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-[#15151b] text-white">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-10 sm:px-8 lg:flex-row lg:items-end lg:justify-between lg:px-10">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="logo-mark scale-[0.78]">
-                <span className="logo-core">B</span>
-              </div>
-              <p className="text-xl font-semibold tracking-[-0.05em]">
-                Better Uptime
-              </p>
-            </div>
-            <p className="mt-3 text-sm text-white/55">
-              SaaS reliability, monitoring, and incident communication.
+            <p className="text-4xl font-medium tracking-[-0.06em] sm:text-5xl">
+              Better Uptime
+            </p>
+            <p className="mt-3 text-[12px] text-white/55">
+              Monitoring, incidents, and status pages for SaaS teams.
             </p>
           </div>
-
           <div className="flex flex-wrap gap-5 text-sm text-white/65">
             <a href="#features">Features</a>
             <a href="#platform">Platform</a>

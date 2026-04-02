@@ -74,12 +74,8 @@ export async function Xack(consumergroup: string, eventID: string) {
   await client.xAck(STREAM_NAME, consumergroup, eventID);
 }
 
-export async function XackBulk(
-  consumergroup: string,
-  eventID: string,
-  eventIDs: string[],
-) {
-  eventIDs.forEach((data) => {
+export async function XackBulk(consumergroup: string, eventIDs: string[]) {
+  eventIDs.forEach((eventID) => {
     Xack(consumergroup, eventID);
   });
 }
