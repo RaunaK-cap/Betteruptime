@@ -7,9 +7,12 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "db": "*",
+    "queuing-system-redis": "*"
   },
   "dependencies": {
+    "dotenv": "^17.4.0",
     "redis": "^5.11.0"
   }
 }
