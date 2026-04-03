@@ -19,12 +19,16 @@ async function main() {
   while (true) {
     const responses = await Xreadgroups(REGION_ID, WORKING_ID);
 
+    if (!responses) {
+      continue;
+    }
     // gotta check type schema here ////
     const promises = responses?.map((msg) =>
       fetchwebsite(msg.message.url, msg.message.id),
     );
     //@ts-ignore
     await Promise.all(promises);
+    console.log(promises.length);
 
     //@ts-ignore
     XackBulk(
