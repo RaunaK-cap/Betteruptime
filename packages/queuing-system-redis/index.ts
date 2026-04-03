@@ -1,14 +1,17 @@
 import { createClient } from "redis";
 import dotenv from "dotenv";
-import { isConstructSignatureDeclaration } from "typescript";
 
 dotenv.config();
 
 const client = createClient().on("error", (err) =>
   console.log("Redis Client Error", err),
 );
+await client.connect();
 
 const STREAM_NAME = process.env.STREAM_NAME!;
+if (!STREAM_NAME) {
+  throw new Error("STREAM_NAME is not available");
+}
 
 type messageType = {
   id: string;
@@ -20,15 +23,14 @@ type messageType = {
 };
 
 export async function xaddbulk(websitedata: { url: string; id: number }[]) {
-  await client.connect();
   const pipeline = client.MULTI();
 
   websitedata.forEach((data) => {
     pipeline.xAdd(
-      "STREAM_NAME",
+      STREAM_NAME,
       "*",
       {
-        website: data.url,
+        url: data.url,
         id: data.id.toString(),
       },
       {
@@ -48,6 +50,20 @@ export async function xaddbulk(websitedata: { url: string; id: number }[]) {
   );
 }
 
+export async function ensureConsumerGroup(consumergroup: string) {
+  try {
+    await client.xGroupCreate(STREAM_NAME, consumergroup, "0", {
+      MKSTREAM: true,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("BUSYGROUP")) {
+      return;
+    }
+
+    throw error;
+  }
+}
+
 //@ts-ignore
 export async function Xreadgroups(
   consumergroup: string,
@@ -62,11 +78,12 @@ export async function Xreadgroups(
     },
     {
       COUNT: 5,
+      BLOCK: 5000,
     },
   );
 
   //@ts-ignore
-  const message = res?.[0]?.message;
+  const message = res?.[0]?.messages;
   return message;
 }
 
@@ -75,7 +92,5 @@ export async function Xack(consumergroup: string, eventID: string) {
 }
 
 export async function XackBulk(consumergroup: string, eventIDs: string[]) {
-  eventIDs.forEach((eventID) => {
-    Xack(consumergroup, eventID);
-  });
+  await Promise.all(eventIDs.map((eventID) => Xack(consumergroup, eventID)));
 }

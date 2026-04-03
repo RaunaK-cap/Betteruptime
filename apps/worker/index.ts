@@ -1,5 +1,9 @@
 import { prisma } from "db";
-import { Xreadgroups, XackBulk } from "queuing-system-redis";
+import {
+  Xreadgroups,
+  XackBulk,
+  ensureConsumerGroup,
+} from "queuing-system-redis";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -16,6 +20,8 @@ if (!WORKING_ID) {
 }
 
 async function main() {
+  await ensureConsumerGroup(REGION_ID);
+
   while (true) {
     const responses = await Xreadgroups(REGION_ID, WORKING_ID);
 
@@ -30,11 +36,9 @@ async function main() {
     await Promise.all(promises);
     console.log(promises.length);
 
-    //@ts-ignore
-    XackBulk(
+    await XackBulk(
       REGION_ID,
-      //@ts-ignore
-      responses?.map((id) => id),
+      responses.map((response) => response.id),
     );
   }
 }
@@ -72,3 +76,5 @@ async function fetchwebsite(url: string, websiteId: string) {
       });
   });
 }
+
+main();
