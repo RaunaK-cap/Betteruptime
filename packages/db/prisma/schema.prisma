@@ -22,7 +22,7 @@ model users {
 
 model website {
   id    Int  @id  @default(autoincrement())
-  User_ID   Int 
+  User_ID   Int
   userID   users   @relation(fields: [User_ID] , references: [id])
   url   String
   createdAt     DateTime    @default(now())
@@ -30,15 +30,8 @@ model website {
   ticks   websiteTick[]
 }
 
-model region {
-  id Int  @id   @default(autoincrement())
-  name  String
-  tickes websiteTick[] 
-
-}
-
 enum websiteStatus {
-  up 
+  up
   down
   unknow
 }
@@ -49,8 +42,7 @@ model websiteTick   {
   Status      websiteStatus
   region_id    Int
   website_id   Int
-  region      region  @relation(fields: [region_id] , references: [id])
-  website     website @relation(fields: [website_id], references: [id]) 
+  website     website @relation(fields: [website_id], references: [id])
   createdAt   DateTime   @default(now())
   updatedAt   DateTime  @updatedAt
 }
