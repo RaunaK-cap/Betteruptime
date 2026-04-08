@@ -1,361 +1,574 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import type { CSSProperties } from "react";
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useRef } from "react";
 
-const links = [
+import { ThemeToggle } from "./components/theme-toggle";
+import { useRevealMotion } from "./components/use-reveal-motion";
+
+const navLinks = [
   ["Platform", "#platform"],
   ["Workflow", "#workflow"],
-  ["Pricing", "#pricing"],
-  ["FAQ", "#faq"],
+  ["Customers", "#customers"],
+  ["Pricing", "#cta"],
 ] as const;
 
-const stats = [
-  ["30 sec", "incident detection"],
-  ["99.99%", "service confidence"],
-  ["18", "global regions"],
+const logos = ["Qonto", "Bolt", "Moss", "Linear", "Monzo", "Vercel"] as const;
+
+const metrics = [
+  ["5+", "hours saved every week"],
+  ["92%", "faster handoff clarity"],
+  ["2 min", "to publish a customer update"],
 ] as const;
 
-const logos = [
-  { name: "Next.js", src: "/next.svg", width: 82, height: 18, dark: true },
-  { name: "Vercel", src: "/vercel.svg", width: 88, height: 18, dark: true },
-  { name: "Turborepo", src: "/turborepo-dark.svg", width: 104, height: 18, dark: true },
-  { name: "Globe", src: "/globe.svg", width: 18, height: 18, dark: false },
-];
-
-const faqs = [
-  [
-    "What does Better Uptime monitor?",
-    "Websites, APIs, SSL certificates, cron jobs, ports, and server heartbeats from multiple regions.",
-  ],
-  [
-    "Does the redesign include animation?",
-    "Yes. It includes scroll reveal, floating hero motion, marquee movement, and hover micro-interactions with reduced-motion fallbacks.",
-  ],
-  [
-    "Can this support a SaaS product style?",
-    "That is the point of the redesign: stronger hierarchy, cleaner cards, richer gradients, and more product-led storytelling.",
-  ],
+const featureCards = [
+  {
+    label: "Letters",
+    title: "Turn incident details into polished updates instantly",
+    copy:
+      "Summaries, status notes, and stakeholder emails start from the same live operational context.",
+  },
+  {
+    label: "Transcribe",
+    title: "Capture meetings, handoffs, and response notes without extra admin",
+    copy:
+      "The reference's consultation flow becomes responder calls here: structured notes, clear owners, and less manual writing.",
+  },
+  {
+    label: "Sync",
+    title: "Keep internal response and external communication in one calm loop",
+    copy:
+      "Every update stays consistent across on-call, incident rooms, and the customer-facing status page.",
+  },
 ] as const;
 
-const particles = Array.from({ length: 16 }, (_, index) => ({
+const platformCards = [
+  {
+    label: "Observe",
+    title: "Detect issues before customers ask what happened",
+    copy:
+      "HTTP, SSL, cron, and heartbeat checks surface the signal that matters and quiet the rest.",
+  },
+  {
+    label: "Coordinate",
+    title: "Escalations stay readable even when the room gets busy",
+    copy:
+      "Schedules, policies, ownership, and runbook context remain attached to the incident instead of scattered across tools.",
+  },
+  {
+    label: "Communicate",
+    title: "Publish customer updates from the same source of truth",
+    copy:
+      "Status pages, maintenance windows, and update drafts all move with the incident timeline.",
+  },
+] as const;
+
+const workflow = [
+  {
+    step: "01",
+    title: "Catch the first signal",
+    copy: "Monitoring identifies what changed and gives the incident a clean starting point.",
+  },
+  {
+    step: "02",
+    title: "Run the response",
+    copy:
+      "Escalations, notes, and runbooks keep responders aligned without extra coordination overhead.",
+  },
+  {
+    step: "03",
+    title: "Share the update",
+    copy:
+      "Internal progress turns into external communication quickly, with far less manual rewriting.",
+  },
+] as const;
+
+const stories = [
+  {
+    name: "Qonto",
+    quote:
+      "We cut the admin around incidents dramatically because response and communication finally live together.",
+  },
+  {
+    name: "Moss",
+    quote:
+      "The new surface feels lighter and calmer, but it still exposes the operational detail our team needs.",
+  },
+  {
+    name: "Bolt",
+    quote:
+      "This is the first monitoring workflow we have used that does not feel fragmented during a real incident.",
+  },
+] as const;
+
+const notes = [
+  {
+    q: "Same theme, different product",
+    a: "The layout borrows the airy hero, pale cards, and editorial spacing from the reference, then translates it into uptime and incident language.",
+  },
+  {
+    q: "Scroll and micro motion",
+    a: "Sections reveal on entry, floating notes drift lightly, cards lift on hover, and the product surface shifts gently with scroll.",
+  },
+  {
+    q: "Auth pages included",
+    a: "Login and signup now use the same sky backdrop, glass panels, CTA treatment, and reveal cadence so they feel native to the landing page.",
+  },
+] as const;
+
+const birds = Array.from({ length: 5 }, (_, index) => ({
   id: index,
   style: {
-    "--particle-left": `${(index * 11 + 9) % 100}%`,
-    "--particle-top": `${(index * 17 + 6) % 72}%`,
-    "--particle-size": `${2 + (index % 3)}px`,
-    "--particle-delay": `${index * -0.7}s`,
-    "--particle-duration": `${9 + (index % 4) * 2}s`,
-    "--particle-drift-x": `${((index % 5) - 2) * 12}px`,
-    "--particle-drift-y": `${((index % 4) - 1.5) * 14}px`,
+    "--bird-left": `${66 + index * 4}%`,
+    "--bird-top": `${10 + (index % 3) * 2}%`,
+    "--bird-delay": `${index * -1.1}s`,
   } as CSSProperties,
 }));
 
 export default function Home() {
-  const heroRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLElement>(null);
+  const sceneCardRef = useRef<HTMLDivElement>(null);
 
-  const tilt = useEffectEvent((event: PointerEvent) => {
-    const node = heroRef.current;
-    if (!node) return;
-    const rect = node.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
-    node.style.setProperty("--rotate-x", `${(0.5 - y) * 10}deg`);
-    node.style.setProperty("--rotate-y", `${(x - 0.5) * 14}deg`);
-    node.style.setProperty("--glow-x", `${x * 100}%`);
-    node.style.setProperty("--glow-y", `${y * 100}%`);
-  });
-
-  const resetTilt = useEffectEvent(() => {
-    const node = heroRef.current;
-    if (!node) return;
-    node.style.setProperty("--rotate-x", "0deg");
-    node.style.setProperty("--rotate-y", "0deg");
-    node.style.setProperty("--glow-x", "50%");
-    node.style.setProperty("--glow-y", "42%");
-  });
-
-  useEffect(() => {
-    const items = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
-    if (!("IntersectionObserver" in window)) {
-      items.forEach((item) => item.classList.add("is-visible"));
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -10% 0px" },
-    );
-    items.forEach((item) => observer.observe(item));
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const node = heroRef.current;
-    if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const onMove = (event: PointerEvent) => tilt(event);
-    const onLeave = () => resetTilt();
-    node.addEventListener("pointermove", onMove);
-    node.addEventListener("pointerleave", onLeave);
-    return () => {
-      node.removeEventListener("pointermove", onMove);
-      node.removeEventListener("pointerleave", onLeave);
-    };
-  }, [resetTilt, tilt]);
+  useRevealMotion({ rootRef: pageRef });
 
   return (
-    <main className="overflow-hidden bg-[var(--surface-0)] text-[var(--ink-1)]">
-      <section className="hero-shell relative overflow-hidden">
-        <div className="hero-aurora hero-aurora-one absolute inset-0" />
-        <div className="hero-aurora hero-aurora-two absolute inset-0" />
-        <div className="hero-mesh absolute inset-0 opacity-45" />
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          {particles.map((particle) => (
-            <span key={particle.id} className="hero-particle" style={particle.style} />
-          ))}
-        </div>
+    <main ref={pageRef} className="landing-page">
+      <section className="hero-shell">
+        <div className="hero-haze hero-haze-left" />
+        <div className="hero-haze hero-haze-right" />
 
-        <div className="relative mx-auto max-w-7xl px-6 pb-18 pt-6 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-7xl px-5 pb-20 pt-6 sm:px-8 lg:px-10">
           <header
             data-reveal
-            className="reveal-block mx-auto flex max-w-6xl flex-col gap-4 rounded-[30px] border border-white/18 bg-white/10 px-4 py-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
+            className="reveal-block nav-wrap mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-full bg-white text-[11px] font-semibold tracking-[0.22em] text-[#4c66ff]">BU</div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white">Better Uptime</p>
-                <p className="text-[11px] text-white/68">Reliability suite for modern SaaS teams</p>
-              </div>
+              <div className="brand-lockup">BU</div>
+              <span className="hero-ink text-[11px] font-semibold uppercase tracking-[0.28em]">
+                Better Uptime
+              </span>
             </div>
-            <nav className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-white/78">
-              {links.map(([label, href]) => (
-                <a key={label} className="nav-chip" href={href}>{label}</a>
+
+            <nav className="hero-muted flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium">
+              {navLinks.map(([label, href]) => (
+                <a key={label} href={href} className="nav-pill">
+                  {label}
+                </a>
               ))}
-              <a href="#pricing" className="button button-light">Start free</a>
+              <Link href="/login" className="nav-pill">
+                Login
+              </Link>
+              <Link href="/signup" className="nav-pill">
+                Sign up
+              </Link>
+              <ThemeToggle />
+              <a href="#cta" className="nav-cta">
+                Start free
+              </a>
             </nav>
           </header>
 
-          <div className="mx-auto grid max-w-6xl items-center gap-14 pt-14 lg:grid-cols-[0.92fr_1.08fr] lg:pt-20">
-            <div className="text-center lg:text-left">
-              <div data-reveal className="reveal-block inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/84 backdrop-blur-xl">
-                <span className="signal-dot bg-white" />
-                Monitoring, on-call, and status pages
-              </div>
-              <div data-reveal className="reveal-block" style={{ transitionDelay: "80ms" }}>
-                <h1 className="mt-6 max-w-2xl text-balance text-5xl font-semibold tracking-[-0.08em] text-white sm:text-6xl lg:text-[74px] lg:leading-[0.97]">
-                  Make your product look as reliable as it runs.
-                </h1>
-                <p className="mx-auto mt-5 max-w-xl text-[15px] leading-8 text-white/76 lg:mx-0">
-                  Better Uptime keeps checks, incidents, responder workflows, and customer communication inside one polished operating surface.
-                </p>
-              </div>
-              <div data-reveal className="reveal-block mt-8 flex flex-col items-center gap-3 sm:flex-row lg:items-start" style={{ transitionDelay: "140ms" }}>
-                <a href="#pricing" className="button button-dark">Book a demo</a>
-                <a href="#platform" className="button button-ghost">Explore platform</a>
-              </div>
-              <div data-reveal className="reveal-block mt-10 grid gap-3 sm:grid-cols-3" style={{ transitionDelay: "220ms" }}>
-                {stats.map(([value, label]) => (
-                  <div key={label} className="glass-card hover-lift rounded-[24px] px-4 py-4">
-                    <p className="text-2xl font-semibold tracking-[-0.06em] text-white">{value}</p>
-                    <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-white/60">{label}</p>
-                  </div>
+          <div className="mx-auto max-w-6xl pt-10 sm:pt-14">
+            <div className="hero-scene">
+              <div className="scene-sky" />
+              <div className="scene-sun" />
+              <div className="scene-cloud scene-cloud-a" />
+              <div className="scene-cloud scene-cloud-b" />
+
+              <div className="scene-birds" aria-hidden="true">
+                {birds.map((bird) => (
+                  <span key={bird.id} className="scene-bird" style={bird.style} />
                 ))}
               </div>
-            </div>
 
-            <div data-reveal className="reveal-block" style={{ transitionDelay: "180ms" }}>
-              <div className="relative mx-auto max-w-[580px]">
-                <div className="hero-chip hero-chip-top-left">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">API latency</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-950">142 ms</p>
-                  <p className="mt-1 text-[11px] text-slate-500">Live from us-east</p>
+              <div className="scene-ridge ridge-back" />
+              <div className="scene-ridge ridge-mid" />
+              <div className="scene-ridge ridge-front" />
+              <div className="scene-meadow scene-meadow-left" />
+              <div className="scene-meadow scene-meadow-right" />
+              <div className="scene-lake" />
+              <div className="scene-lake-glow" />
+              <div className="scene-foreground" />
+
+              <div className="hero-grid">
+                <div className="hero-copy">
+                  <div data-reveal className="hero-eyebrow reveal-block">
+                    <span className="live-dot" />
+                    Patients, not paperwork. Incidents, not busywork.
+                  </div>
+
+                  <div data-reveal className="reveal-block" style={{ transitionDelay: "90ms" }}>
+                    <h1 className="hero-title">
+                      Calm incident response with the softness of a modern editorial landing page.
+                    </h1>
+                    <p className="hero-body">
+                      Better Uptime now lands with the same airy sky, rounded product cards, and
+                      quiet confidence as your reference, then carries that same system into login
+                      and signup.
+                    </p>
+                  </div>
+
+                  <div
+                    data-reveal
+                    className="reveal-block mt-8 flex flex-col items-start gap-3 sm:flex-row"
+                    style={{ transitionDelay: "160ms" }}
+                  >
+                    <Link href="/signup" className="button button-dark">
+                      Sign up for free
+                    </Link>
+                    <Link href="/login" className="button button-soft">
+                      Book a demo
+                    </Link>
+                  </div>
                 </div>
-                <div className="hero-chip hero-chip-top-right">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Status page</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-950">Synced</p>
-                  <p className="mt-1 text-[11px] text-slate-500">Customer updates ready</p>
-                </div>
-                <div className="hero-chip hero-chip-bottom-left">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Escalation</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-950">2 responders</p>
-                  <p className="mt-1 text-[11px] text-slate-500">Routing in progress</p>
-                </div>
-                <div className="hero-chip hero-chip-bottom-right">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Heartbeat</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-950">Healthy</p>
-                  <p className="mt-1 text-[11px] text-slate-500">Last ping 4s ago</p>
-                </div>
-                <div className="hero-glow absolute inset-x-12 top-14 h-32 rounded-full" />
-                <div ref={heroRef} className="hero-stage">
-                  <div className="hero-stage-inner">
-                    <div className="hero-stage-bar">
+
+                <div
+                  ref={sceneCardRef}
+                  data-reveal
+                  className="reveal-block hero-stage-card"
+                  style={{ transitionDelay: "160ms" }}
+                >
+                  <div className="hero-stage-surface">
+                    <div className="hero-stage-topbar">
                       <div className="flex items-center gap-2">
-                        <span className="stage-dot bg-[#ff8d63]" />
-                        <span className="stage-dot bg-[#ffd166]" />
-                        <span className="stage-dot bg-[#65e4a4]" />
+                        <span className="window-dot bg-[#8fc0ff]" />
+                        <span className="window-dot bg-[#cbdfff]" />
+                        <span className="window-dot bg-[#eef5ff]" />
                       </div>
-                      <span className="rounded-full border border-slate-200 px-3 py-1 text-[10px] font-medium text-slate-500">
-                        betteruptime.app/mission-control
-                      </span>
+                      <span className="window-url">status.betteruptime.com/incident-room</span>
                     </div>
-                    <div className="hero-screen">
-                      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                        <div className="screen-panel screen-panel-primary">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5d73ff]">Mission control</p>
-                              <h2 className="mt-3 text-xl font-semibold tracking-[-0.05em] text-slate-950">Incidents, status, and response notes in one timeline.</h2>
-                            </div>
-                            <div className="pill-badge"><span className="signal-dot bg-[#47d18c]" />24 healthy</div>
-                          </div>
-                          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                            {["API drift", "Status synced", "Escalation active"].map((item) => (
-                              <div key={item} className="hover-lift rounded-[22px] border border-white/80 bg-white/78 px-4 py-4 shadow-[0_14px_32px_rgba(78,95,173,0.08)]">
-                                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Signal</p>
-                                <p className="mt-2 text-sm font-semibold text-slate-950">{item}</p>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="chart-shell mt-4">
-                            <div className="chart-grid" />
-                            <div className="chart-line chart-line-primary" />
-                            <div className="chart-line chart-line-secondary" />
-                            <div className="chart-tooltip"><span className="signal-dot bg-[#5d73ff]" />Error burst detected</div>
-                          </div>
+
+                    <div className="hero-stage-body">
+                      <article className="dashboard-card dashboard-card-primary hover-rise">
+                        <span className="card-kicker">Overview</span>
+                        <h2>Save hours a week with one shared response workspace</h2>
+                        <p>
+                          Monitoring, escalations, and customer messaging stay aligned from the
+                          first alert to the final resolution note.
+                        </p>
+                        <div className="dashboard-meter">
+                          <span />
                         </div>
-                        <div className="grid gap-4">
-                          <div className="screen-panel screen-panel-dark">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">Response room</p>
-                            <div className="mt-4 space-y-3">
-                              {["Database latency above threshold", "Rollback approved", "Status page update published"].map((item) => (
-                                <div key={item} className="rounded-[18px] border border-white/10 bg-white/8 px-4 py-3 text-[12px] leading-5 text-white/72">{item}</div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="screen-panel screen-panel-soft">
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Status page</p>
-                                <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-slate-950">Investigating elevated API latency</p>
-                              </div>
-                              <div className="status-ring"><span className="signal-dot bg-[#ff8d63]" /></div>
-                            </div>
-                            <div className="status-stack mt-5">
-                              <div className="status-row"><span>Internal note</span><strong>Rollback in progress</strong></div>
-                              <div className="status-row"><span>Customer post</span><strong>Draft ready</strong></div>
-                              <div className="status-row"><span>ETA</span><strong>12 minutes</strong></div>
-                            </div>
-                          </div>
-                        </div>
+                      </article>
+
+                      <div className="hero-stage-stack">
+                        <article className="dashboard-card dashboard-card-soft hover-rise">
+                          <span className="card-kicker">Incident draft</span>
+                          <strong>Latency increase detected in 3 regions</strong>
+                          <p>Suggested customer update ready in 24 seconds.</p>
+                        </article>
+
+                        <article className="dashboard-card dashboard-card-note hover-rise">
+                          <span className="card-kicker">Response room</span>
+                          <ul className="dash-list">
+                            <li>Owner assigned</li>
+                            <li>Rollback approved</li>
+                            <li>Status sync live</li>
+                          </ul>
+                        </article>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div data-reveal className="reveal-block mx-auto mt-14 max-w-6xl rounded-[30px] border border-white/16 bg-white/10 px-5 py-5 backdrop-blur-xl" style={{ transitionDelay: "260ms" }}>
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/64">Works with your stack</p>
-                <p className="mt-2 text-sm text-white/78">Built for teams shipping on modern web infrastructure.</p>
+              <div className="floating-badge floating-badge-left">
+                <span className="badge-label">Before</span>
+                <strong>Fragmented incident notes</strong>
+                <small>updates spread across tools</small>
               </div>
-              <div className="logo-marquee max-w-[460px]">
-                <div className="logo-track">
-                  {[...logos, ...logos].map((logo, index) => (
-                    <div key={`${logo.name}-${index}`} className="logo-pill">
-                      <Image src={logo.src} alt={logo.name} width={logo.width} height={logo.height} className={logo.dark ? "brightness-0 invert" : ""} />
-                      <span>{logo.name}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="floating-badge floating-badge-right">
+                <span className="badge-label">After</span>
+                <strong>Customer-ready updates</strong>
+                <small>generated from the same timeline</small>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 flex justify-center">
-            <a href="#platform" className="scroll-cue"><span className="scroll-cue-dot" />Scroll to explore</a>
+          <div
+            data-reveal
+            className="reveal-block mx-auto mt-8 max-w-5xl text-center"
+            style={{ transitionDelay: "220ms" }}
+          >
+            <p className="hero-muted text-[11px] uppercase tracking-[0.28em]">
+              Trusted by modern teams running business-critical systems
+            </p>
+            <div className="logo-row mt-5">
+              {logos.map((logo) => (
+                <span key={logo} className="logo-chip">
+                  {logo}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="platform" className="relative -mt-8 rounded-t-[42px] bg-[var(--surface-0)]">
-        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 lg:px-10">
-          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-            <div data-reveal className="reveal-block">
-              <p className="eyebrow">Platform overview</p>
-              <h2 className="mt-4 max-w-lg text-balance text-3xl font-semibold tracking-[-0.06em] text-slate-950 sm:text-4xl">
-                Bright SaaS composition, better hierarchy, and cleaner motion.
-              </h2>
-            </div>
-            <div data-reveal className="reveal-block" style={{ transitionDelay: "80ms" }}>
-              <p className="max-w-2xl text-[15px] leading-8 text-slate-600">
-                The new structure keeps the glowing hero from your reference, but grounds it in Better Uptime product messaging instead of generic filler.
-              </p>
-            </div>
+      <section className="section-surface">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-10">
+          <div className="grid gap-10 border-t border-black/6 pt-10 md:grid-cols-3">
+            {metrics.map(([value, label], index) => (
+              <article
+                key={label}
+                data-reveal
+                className="reveal-block metric-column"
+                style={{ transitionDelay: `${index * 70}ms` }}
+              >
+                <h2>{value}</h2>
+                <p>{label}</p>
+              </article>
+            ))}
           </div>
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-            <article data-reveal className="reveal-block surface-card overflow-hidden px-6 py-6 sm:px-7">
-              <div className="surface-orbit surface-orbit-one" />
-              <div className="surface-orbit surface-orbit-two" />
-              <div className="relative z-10">
-                <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-                  <div className="max-w-xl">
-                    <p className="eyebrow">Unified mission control</p>
-                    <h3 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-slate-950">Product-grade UI for reliability teams.</h3>
-                  </div>
-                  <div className="pill-badge bg-[#eff3ff] text-[#4c66ff]">Live dashboard preview</div>
+          <div className="mt-16 text-center">
+            <p
+              data-reveal
+              className="section-ink reveal-block mx-auto max-w-3xl text-balance text-3xl font-semibold tracking-[-0.06em] sm:text-4xl"
+            >
+              The product story now feels lighter, clearer, and more premium.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {featureCards.map((card, index) => (
+              <article
+                key={card.title}
+                data-reveal
+                className="reveal-block feature-card hover-rise"
+                style={{ transitionDelay: `${index * 80}ms` }}
+              >
+                <div className="feature-icon">
+                  <span>{card.label}</span>
                 </div>
-                <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                  <div className="rounded-[28px] border border-[#d8def2] bg-[linear-gradient(180deg,#eef3ff_0%,#fbfcff_100%)] p-5">
-                    <div className="rounded-[24px] bg-[#111b46] p-5 text-white shadow-[0_28px_60px_rgba(17,27,70,0.22)]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/54">Incident stream</p>
-                      <p className="mt-2 text-lg font-semibold tracking-[-0.04em]">Four systems synced across one response layer.</p>
-                      <div className="mt-5 space-y-3">
-                        {["Global checks rerun automatically", "Pager escalation after 90 seconds", "Status page updates pushed from the incident room"].map((item) => (
-                          <div key={item} className="hover-lift flex items-start gap-3 rounded-[20px] border border-white/10 bg-white/7 px-4 py-3">
-                            <span className="signal-dot mt-1 bg-[#65e4a4]" />
-                            <p className="text-[12px] leading-5 text-white/74">{item}</p>
+                <h3>{card.title}</h3>
+                <p>{card.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="platform" className="platform-section">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-10">
+          <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <div data-reveal className="reveal-block">
+              <p className="section-kicker">Platform overview</p>
+              <h2 className="section-ink mt-4 max-w-lg text-balance text-3xl font-semibold tracking-[-0.065em] sm:text-5xl">
+                One platform for signal, response, and clear communication.
+              </h2>
+              <p className="section-muted mt-5 max-w-xl text-[15px] leading-8">
+                The visual system changed, but the product story stayed grounded in Better Uptime:
+                monitors, on-call workflows, incident coordination, and public status updates.
+              </p>
+
+              <div className="mt-8 grid gap-4">
+                {platformCards.map((card, index) => (
+                  <article
+                    key={card.title}
+                    data-reveal
+                    className="reveal-block platform-copy-card hover-rise"
+                    style={{ transitionDelay: `${index * 80 + 80}ms` }}
+                  >
+                    <p className="card-kicker">{card.label}</p>
+                    <h3>{card.title}</h3>
+                    <p>{card.copy}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div data-reveal className="reveal-block" style={{ transitionDelay: "140ms" }}>
+              <div ref={sceneCardRef} className="product-stage">
+                <div className="product-stage-glow" />
+                <div className="product-window">
+                  <div className="window-topbar">
+                    <div className="flex items-center gap-2">
+                      <span className="window-dot bg-[#73b8ff]" />
+                      <span className="window-dot bg-[#a9d2ff]" />
+                      <span className="window-dot bg-[#dbeeff]" />
+                    </div>
+                    <span className="window-url">app.betteruptime.com/overview</span>
+                  </div>
+
+                  <div className="window-body">
+                    <div className="status-overview-card">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="card-kicker text-[#5f6fe0]">Mission control</p>
+                          <h3 className="section-ink mt-3 text-xl font-semibold tracking-[-0.05em]">
+                            The same soft visual system, now translated into a real uptime dashboard.
+                          </h3>
+                        </div>
+                        <div className="healthy-pill">
+                          <span className="live-dot live-dot-small" />
+                          24 healthy
+                        </div>
+                      </div>
+
+                      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                        {["Checks", "Escalations", "Status sync"].map((item) => (
+                          <div key={item} className="mini-panel hover-rise">
+                            <span>{item}</span>
+                            <strong>Live</strong>
                           </div>
                         ))}
                       </div>
+
+                      <div className="activity-chart mt-5">
+                        <div className="activity-grid" />
+                        <div className="activity-wave activity-wave-primary" />
+                        <div className="activity-wave activity-wave-secondary" />
+                        <div className="chart-note">
+                          <span className="live-dot live-dot-small" />
+                          auto-escalation suggested
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="stack gap-4">
+                      <div className="response-card">
+                        <p className="card-kicker text-white/58">Incident room</p>
+                        <div className="mt-4 space-y-3">
+                          {[
+                            "Heartbeat failed in eu-west",
+                            "DB pool reset approved",
+                            "Rollback owner confirmed",
+                          ].map((item) => (
+                            <div key={item} className="response-row">
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="customer-card">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="card-kicker">Status page</p>
+                            <h3 className="section-ink mt-2 text-lg font-semibold tracking-[-0.04em]">
+                              Elevated API latency
+                            </h3>
+                          </div>
+                          <div className="pulse-wrap">
+                            <span className="pulse-core" />
+                          </div>
+                        </div>
+
+                        <div className="mt-5 grid gap-3">
+                          {[
+                            ["Internal", "Rollback running"],
+                            ["Public post", "Draft ready"],
+                            ["ETA", "12 min"],
+                          ].map(([label, value]) => (
+                            <div key={label} className="customer-row">
+                              <span>{label}</span>
+                              <strong>{value}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid gap-4">
-                    {[
-                      { title: "Monitoring", copy: "APIs, websites, SSL, cron jobs, and ports in one clean view.", dark: false },
-                      { title: "On-call", copy: "Schedules, routing, runbooks, and escalation logic that hold up under pressure.", dark: true },
-                      { title: "Status pages", copy: "Branded customer updates that feel like part of the product.", dark: false },
-                    ].map((card) => (
-                      <div key={card.title} className={`hover-lift rounded-[28px] border p-5 shadow-[0_18px_40px_rgba(95,105,146,0.08)] ${card.dark ? "border-[#243473] bg-[linear-gradient(135deg,#111c48_0%,#4c66ff_100%)] text-white" : "border-white/60 bg-[linear-gradient(135deg,#ffffff_0%,#edf3ff_100%)] text-slate-950"}`}>
-                        <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${card.dark ? "text-white/60" : "text-slate-400"}`}>{card.title}</p>
-                        <p className={`mt-3 text-sm leading-6 ${card.dark ? "text-white/78" : "text-slate-600"}`}>{card.copy}</p>
-                      </div>
-                    ))}
-                  </div>
+                </div>
+
+                <div className="stage-float stage-float-a">
+                  <span className="badge-label">Alert</span>
+                  <strong>Latency threshold crossed</strong>
+                  <small>policy escalated in 24s</small>
+                </div>
+
+                <div className="stage-float stage-float-b">
+                  <span className="badge-label">Comms</span>
+                  <strong>Status page synchronized</strong>
+                  <small>customer draft is up to date</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="workflow" className="section-surface">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-10">
+          <div className="text-center">
+            <p data-reveal className="reveal-block section-kicker">
+              Workflow
+            </p>
+            <h2
+              data-reveal
+              className="section-ink reveal-block mx-auto mt-4 max-w-2xl text-balance text-3xl font-semibold tracking-[-0.06em] sm:text-4xl"
+              style={{ transitionDelay: "80ms" }}
+            >
+              Built around what responders actually need when systems break.
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {workflow.map((item, index) => (
+              <article
+                key={item.title}
+                data-reveal
+                className="reveal-block workflow-card hover-rise"
+                style={{ transitionDelay: `${index * 80}ms` }}
+              >
+                <span className="workflow-step">{item.step}</span>
+                <h3>{item.title}</h3>
+                <p>{item.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="customers" className="leaders-section">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-10">
+          <div className="text-center">
+            <p data-reveal className="reveal-block section-kicker text-white/60">
+              Trusted by leaders
+            </p>
+            <h2
+              data-reveal
+              className="reveal-block mt-4 text-3xl font-semibold tracking-[-0.06em] text-white sm:text-4xl"
+              style={{ transitionDelay: "80ms" }}
+            >
+              Teams rely on Better Uptime when the work is critical.
+            </h2>
+            <p
+              data-reveal
+              className="reveal-block mx-auto mt-4 max-w-2xl text-[15px] leading-8 text-white/72"
+              style={{ transitionDelay: "150ms" }}
+            >
+              The testimonial section keeps the softer rhythm from the reference, then shifts into a
+              darker proof moment to avoid a flat one-note page.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-[0.74fr_0.26fr]">
+            <article data-reveal className="reveal-block quote-stage" style={{ transitionDelay: "80ms" }}>
+              <div className="quote-visual">
+                <div className="quote-landscape" />
+                <div className="quote-copy">
+                  <span className="card-kicker text-white/62">Featured story</span>
+                  <h3>
+                    &quot;Better Uptime helped us compress alerting, coordination, and communication
+                    into one reliable system.&quot;
+                  </h3>
+                  <p>Platform Engineering, Better Uptime customer</p>
                 </div>
               </div>
             </article>
 
-            <div className="grid gap-4">
-              {[
-                ["Incident playbooks", "Attach response steps directly to alerts so the first minutes are not chaotic."],
-                ["Global visibility", "See whether an issue is local, regional, or global before you wake the whole team."],
-                ["Customer confidence", "Keep users updated with branded, real-time status communication."],
-              ].map(([title, copy], index) => (
-                <article key={title} data-reveal className="reveal-block surface-card hover-lift px-6 py-6" style={{ transitionDelay: `${index * 70}ms` }}>
-                  <div className="inline-flex rounded-full bg-[#eef3ff] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4c66ff]">0{index + 1}</div>
-                  <h3 className="mt-4 text-lg font-semibold tracking-[-0.04em] text-slate-950">{title}</h3>
-                  <p className="mt-3 text-[14px] leading-7 text-slate-600">{copy}</p>
+            <div className="grid gap-5">
+              {stories.map((story, index) => (
+                <article
+                  key={story.name}
+                  data-reveal
+                  className="reveal-block story-quote hover-rise"
+                  style={{ transitionDelay: `${index * 70 + 120}ms` }}
+                >
+                  <h3>{story.name}</h3>
+                  <p>{story.quote}</p>
                 </article>
               ))}
             </div>
@@ -363,109 +576,75 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="workflow" className="bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 lg:px-10">
-          <div className="grid gap-10 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
-            <div data-reveal className="reveal-block workflow-panel">
-              <div className="workflow-shimmer" />
-              <div className="relative z-10">
-                <p className="eyebrow text-white/60">Workflow</p>
-                <h2 className="mt-3 max-w-md text-3xl font-semibold tracking-[-0.06em] text-white sm:text-4xl">Response design for teams that move fast.</h2>
-                <p className="mt-4 max-w-md text-[14px] leading-7 text-white/72">The layout keeps the visual energy of a SaaS product page while staying grounded in actual product messaging.</p>
-                <div className="mt-8 space-y-3">
-                  {["Alert rules mapped to ownership", "Status page updates linked to incident actions", "Runbooks embedded into the first response screen"].map((item) => (
-                    <div key={item} className="rounded-[20px] border border-white/10 bg-white/8 px-4 py-3 text-[12px] leading-5 text-white/75">{item}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-4">
-              {[
-                ["01", "Detect instantly", "Run checks from multiple regions and catch regressions before customers open tickets."],
-                ["02", "Coordinate calmly", "Bring response notes, ownership, and escalation logic into the same workspace."],
-                ["03", "Communicate clearly", "Send internal alerts and external status updates from the same incident thread."],
-              ].map(([step, title, copy], index) => (
-                <article key={step} data-reveal className="reveal-block workflow-step hover-lift" style={{ transitionDelay: `${index * 80}ms` }}>
-                  <div className="workflow-step-number">{step}</div>
-                  <div>
-                    <h3 className="text-xl font-semibold tracking-[-0.04em] text-slate-950">{title}</h3>
-                    <p className="mt-3 max-w-xl text-[14px] leading-7 text-slate-600">{copy}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="bg-[var(--surface-0)]">
-        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 lg:px-10">
-          <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+      <section id="stories" className="section-surface">
+        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:px-10">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div data-reveal className="reveal-block">
-              <p className="eyebrow">Launch offer</p>
-              <h2 className="mt-4 max-w-md text-3xl font-semibold tracking-[-0.06em] text-slate-950 sm:text-4xl">Everything needed for a modern reliability homepage.</h2>
-              <p className="mt-4 max-w-lg text-[15px] leading-8 text-slate-600">This version adds the stronger visual hierarchy, motion language, and section pacing your reference was pointing toward.</p>
+              <p className="section-kicker">Notes on the rebuild</p>
+              <h2 className="section-ink mt-4 max-w-lg text-balance text-3xl font-semibold tracking-[-0.06em] sm:text-4xl">
+                Motion and composition now carry more of the story.
+              </h2>
+              <p className="section-muted mt-5 max-w-xl text-[15px] leading-8">
+                The old page had product content already. This version pushes the visual language
+                closer to your reference: cleaner sky gradients, card-based storytelling, gentler
+                whitespace, and more deliberate movement.
+              </p>
             </div>
-            <div data-reveal className="reveal-block rounded-[34px] border border-[#d6ddfb] bg-[linear-gradient(135deg,#18214d_0%,#3f56ef_58%,#ff9866_130%)] p-6 text-white shadow-[0_28px_80px_rgba(63,86,239,0.18)] sm:p-7" style={{ transitionDelay: "90ms" }}>
-              <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/58">Pro landing page</p>
-                  <p className="mt-3 text-4xl font-semibold tracking-[-0.08em]">SaaS-ready redesign</p>
-                </div>
-                <div className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm text-white/78">Motion + structure refresh</div>
-              </div>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {["Monitoring, on-call, and status pages in one story", "Micro-interactions and scroll animation", "Cleaner cards and stronger gradients"].map((item) => (
-                  <div key={item} className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-4 text-[13px] leading-6 text-white/78">{item}</div>
-                ))}
-              </div>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a href="#faq" className="button button-light">Review FAQ</a>
-                <a href="#platform" className="button button-outline-white">See platform blocks</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section id="faq" className="bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-18 sm:px-8 lg:px-10">
-          <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-            <div data-reveal className="reveal-block">
-              <p className="eyebrow">FAQ</p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.06em] text-slate-950 sm:text-4xl">Questions about the redesign.</h2>
-            </div>
-            <div className="space-y-4">
-              {faqs.map(([question, answer], index) => (
-                <article key={question} data-reveal className="reveal-block hover-lift rounded-[28px] border border-[#e5e9f6] bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] px-6 py-5 shadow-[0_16px_38px_rgba(86,96,139,0.05)]" style={{ transitionDelay: `${index * 70}ms` }}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">{question}</h3>
-                      <p className="mt-3 text-[14px] leading-7 text-slate-600">{answer}</p>
-                    </div>
-                    <span className="text-2xl leading-none text-[#c8d2ef]">+</span>
-                  </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {notes.map((item, index) => (
+                <article
+                  key={item.q}
+                  data-reveal
+                  className="reveal-block note-card hover-rise"
+                  style={{ transitionDelay: `${index * 80}ms` }}
+                >
+                  <h3>{item.q}</h3>
+                  <p>{item.a}</p>
                 </article>
               ))}
+              <article
+                data-reveal
+                className="reveal-block note-card note-card-accent hover-rise"
+                style={{ transitionDelay: "240ms" }}
+              >
+                <h3>Micro-interactions</h3>
+                <p>
+                  Buttons lift, proof cards shimmer subtly, feature blocks pulse on hover, and the
+                  dashboard panels drift just enough to feel alive without becoming noisy.
+                </p>
+              </article>
             </div>
           </div>
         </div>
       </section>
 
-      <footer className="bg-[#0e1433] text-white">
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-6 py-10 sm:px-8 lg:flex-row lg:items-end lg:justify-between lg:px-10">
-          <div>
-            <p className="text-4xl font-semibold tracking-[-0.08em] sm:text-5xl">Better Uptime</p>
-            <p className="mt-3 text-[13px] text-white/58">Monitoring, incidents, and status pages for teams shipping serious products.</p>
-          </div>
-          <div className="flex flex-wrap gap-5 text-sm text-white/62">
-            {links.map(([label, href]) => (
-              <a key={label} href={href}>{label}</a>
-            ))}
+      <section id="cta" className="cta-section">
+        <div className="mx-auto max-w-6xl px-5 pb-20 pt-6 sm:px-8 lg:px-10">
+          <div data-reveal className="reveal-block cta-panel">
+            <div>
+              <p className="section-kicker text-white/60">Launch faster</p>
+              <h2 className="mt-4 max-w-2xl text-balance text-4xl font-semibold tracking-[-0.07em] text-white sm:text-5xl">
+                A landing page, signup, and login flow that now feel like one premium product.
+              </h2>
+              <p className="mt-5 max-w-2xl text-[15px] leading-8 text-white/74">
+                The reference direction is now carried across the entire first-run experience,
+                including auth, while staying specific to monitoring, incident response, and status
+                communication.
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/signup" className="button button-cream">
+                Create account
+              </Link>
+              <Link href="/login" className="button button-outline">
+                Open login
+              </Link>
+            </div>
           </div>
         </div>
-      </footer>
+      </section>
     </main>
   );
 }
