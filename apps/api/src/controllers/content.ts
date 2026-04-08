@@ -59,3 +59,28 @@ export const getwebsite = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const deletewebsite = async (req: Request, res: Response) => {
+  const { websiteID } = req.body;
+
+  try {
+    const Resp = await prisma.website.delete({
+      where: {
+        id: Number(websiteID),
+        User_ID: Number(req.userID!),
+      },
+      include: {
+        ticks: true,
+      },
+    });
+
+    res.status(200).json({
+      message: "websitedata has been deleted",
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(400).json({
+      message: "error while deleting ",
+    });
+  }
+};

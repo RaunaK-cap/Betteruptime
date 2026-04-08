@@ -4,8 +4,8 @@ export default function SignupPage() {
   return (
     <AuthShell
       mode="signup"
-      title="Create your Better Uptime account"
-      description="Set up your team workspace and start with a calmer monitoring and incident workflow."
+      title="Create your BetterUptime workspace"
+      description="Set up region-aware website monitoring with simple username access and a cleaner first-run flow."
     />
   );
 }

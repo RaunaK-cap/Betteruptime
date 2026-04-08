@@ -4,8 +4,8 @@ export default function LoginPage() {
   return (
     <AuthShell
       mode="login"
-      title="Log in to Better Uptime"
-      description="Access your monitors, on-call schedules, and status workflows from one place."
+      title="Log in to BetterUptime"
+      description="Open your uptime dashboard, outage history, and regional stats from one focused login screen."
     />
   );
 }

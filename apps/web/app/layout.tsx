@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
-import "./revamp.css";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -14,9 +13,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Better Uptime | SaaS Monitoring Landing Page",
+  title: "BetterUptime | Region-Aware Website Monitoring",
   description:
-    "A polished SaaS landing page for Better Uptime with uptime monitoring, incident response, and status page messaging.",
+    "BetterUptime monitors websites across India, the US, and nearby regions with frequent checks, outage history, and clear uptime analytics.",
 };
 
 export default function RootLayout({
