@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 // Header Component
 function Header() {
@@ -13,8 +13,8 @@ function Header() {
       setScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -24,8 +24,8 @@ function Header() {
       transition={{ duration: 0.8 }}
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/80 backdrop-blur-md border-b border-gray-200'
-          : 'bg-transparent'
+          ? "bg-white/80 backdrop-blur-md border-b border-gray-200"
+          : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -48,7 +48,7 @@ function Header() {
         </motion.div>
 
         <nav className="hidden md:flex items-center gap-8">
-          {['Features', 'Integrations', 'Pricing', 'Docs'].map((item) => (
+          {["Features", "Integrations", "Pricing", "Docs"].map((item) => (
             <motion.a
               key={item}
               href="#"
@@ -70,7 +70,7 @@ function Header() {
               Sign In
             </motion.button>
           </Link>
-          <Link href="/auth/signup">
+          <Link href="/auth/login">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -117,7 +117,9 @@ function HeroSection() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 mb-8"
         >
           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse-glow"></div>
-          <span className="text-xs text-emerald-700 font-light">Real-time monitoring is live</span>
+          <span className="text-xs text-emerald-700 font-light">
+            Real-time monitoring is live
+          </span>
         </motion.div>
 
         <motion.h1
@@ -126,7 +128,7 @@ function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-          Know Your Systems Are{' '}
+          Know Your Systems Are{" "}
           <span className="text-emerald-500">Always Live</span>
         </motion.h1>
 
@@ -136,7 +138,8 @@ function HeroSection() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          Beautiful uptime monitoring and incident management for teams that refuse to compromise. Detect issues in seconds, not hours.
+          Beautiful uptime monitoring and incident management for teams that
+          refuse to compromise. Detect issues in seconds, not hours.
         </motion.p>
 
         <motion.div
@@ -145,9 +148,12 @@ function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <Link href="/auth/signup">
+          <Link href="/auth/login">
             <motion.button
-              whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(16, 185, 129, 0.2)' }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 20px 40px rgba(16, 185, 129, 0.2)",
+              }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-3 bg-emerald-500 text-white rounded-lg text-sm font-light hover:bg-emerald-600 transition-colors glass"
             >
@@ -171,17 +177,23 @@ function HeroSection() {
           transition={{ duration: 0.8, delay: 0.6 }}
         >
           <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">27K+</span>
+            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">
+              27K+
+            </span>
             <span className="text-slate-600 text-xs">Active Monitors</span>
           </div>
           <div className="w-px bg-slate-200"></div>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">99.99%</span>
+            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">
+              99.99%
+            </span>
             <span className="text-slate-600 text-xs">Average Uptime</span>
           </div>
           <div className="w-px bg-slate-200"></div>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">2.3s</span>
+            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">
+              2.3s
+            </span>
             <span className="text-slate-600 text-xs">Alert Time</span>
           </div>
         </motion.div>
@@ -218,14 +230,14 @@ interface BentoItemProps {
   children: React.ReactNode;
 }
 
-function BentoItem({ className = '', delay = 0, children }: BentoItemProps) {
+function BentoItem({ className = "", delay = 0, children }: BentoItemProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay }}
-      viewport={{ once: true, margin: '-100px' }}
-      whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)' }}
+      viewport={{ once: true, margin: "-100px" }}
+      whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)" }}
       className={`glass rounded-xl p-8 transition-all duration-300 ${className}`}
     >
       {children}
@@ -237,46 +249,52 @@ function BentoItem({ className = '', delay = 0, children }: BentoItemProps) {
 function FeaturesSection() {
   const bentoItems = [
     {
-      title: 'Instant Alerts',
-      description: 'Get notified instantly via SMS, email, Slack, or voice call when issues occur',
-      colSpan: 'lg:col-span-2',
-      rowSpan: 'lg:row-span-1',
-      content: 'alerts',
+      title: "Instant Alerts",
+      description:
+        "Get notified instantly via SMS, email, Slack, or voice call when issues occur",
+      colSpan: "lg:col-span-2",
+      rowSpan: "lg:row-span-1",
+      content: "alerts",
     },
     {
-      title: 'Multi-Location Monitoring',
-      description: 'Monitor from multiple geographic locations to eliminate false positives',
-      colSpan: 'lg:col-span-1',
-      rowSpan: 'lg:row-span-1',
-      content: 'location',
+      title: "Multi-Location Monitoring",
+      description:
+        "Monitor from multiple geographic locations to eliminate false positives",
+      colSpan: "lg:col-span-1",
+      rowSpan: "lg:row-span-1",
+      content: "location",
     },
     {
-      title: 'Status Pages',
-      description: 'Beautiful status pages to keep your customers informed in real-time',
-      colSpan: 'lg:col-span-1',
-      rowSpan: 'lg:row-span-1',
-      content: 'status',
+      title: "Status Pages",
+      description:
+        "Beautiful status pages to keep your customers informed in real-time",
+      colSpan: "lg:col-span-1",
+      rowSpan: "lg:row-span-1",
+      content: "status",
     },
     {
-      title: 'Deep Insights',
-      description: 'Detailed analytics with screenshots, logs, and response times for debugging',
-      colSpan: 'lg:col-span-1',
-      rowSpan: 'lg:row-span-1',
-      content: 'analytics',
+      title: "Deep Insights",
+      description:
+        "Detailed analytics with screenshots, logs, and response times for debugging",
+      colSpan: "lg:col-span-1",
+      rowSpan: "lg:row-span-1",
+      content: "analytics",
     },
     {
-      title: 'On-Call Scheduling',
-      description: 'Smart scheduling system for on-call rotations and incident escalation',
-      colSpan: 'lg:col-span-1',
-      rowSpan: 'lg:row-span-1',
-      content: 'schedule',
+      title: "On-Call Scheduling",
+      description:
+        "Smart scheduling system for on-call rotations and incident escalation",
+      colSpan: "lg:col-span-1",
+      rowSpan: "lg:row-span-1",
+      content: "schedule",
     },
     {
-      title: 'API Integrations',
-      description: 'Seamless integrations with your favorite tools and platforms',
-      colSpan: 'lg:col-span-1',
-      rowSpan: 'lg:row-span-1',
-      content: 'integrations',
+      title: "API Integrations",
+      description:
+        "Seamless integrations with your favorite tools and platforms",
+      colSpan: "lg:col-span-1",
+      rowSpan: "lg:row-span-1",
+      content: "integrations",
     },
   ];
 
@@ -290,7 +308,9 @@ function FeaturesSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="text-xs text-emerald-600 font-light mb-4 block">POWERFUL FEATURES</span>
+          <span className="text-xs text-emerald-600 font-light mb-4 block">
+            POWERFUL FEATURES
+          </span>
           <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight">
             Everything You Need To Monitor
           </h2>
@@ -306,60 +326,126 @@ function FeaturesSection() {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true, margin: '-100px' }}
+              viewport={{ once: true, margin: "-100px" }}
               whileHover={{ y: -8, transition: { duration: 0.3 } }}
               className={`${item.colSpan} ${item.rowSpan} bg-white/50 backdrop-blur-sm rounded-2xl p-8 border border-white/60 hover:border-emerald-300/50 hover:bg-white/70 transition-all duration-300 cursor-pointer group`}
             >
               {/* Visual Content Area */}
               <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-50 rounded-xl mb-6 flex items-center justify-center overflow-hidden group-hover:from-emerald-50 group-hover:to-slate-50 transition-colors duration-300">
-                {item.content === 'alerts' && (
+                {item.content === "alerts" && (
                   <div className="w-full h-full flex items-center justify-center gap-4">
-                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity }} className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center"
+                    >
                       <span className="text-2xl">💬</span>
                     </motion.div>
-                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0.2 }} className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
+                      className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center"
+                    >
                       <span className="text-2xl">📧</span>
                     </motion.div>
-                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0.4 }} className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center">
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+                      className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center"
+                    >
                       <span className="text-2xl">🔴</span>
                     </motion.div>
                   </div>
                 )}
-                {item.content === 'location' && (
+                {item.content === "location" && (
                   <div className="flex flex-wrap gap-4 justify-center">
-                    <motion.div whileHover={{ scale: 1.1 }} className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light">US-East</motion.div>
-                    <motion.div whileHover={{ scale: 1.1 }} className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light">EU-West</motion.div>
-                    <motion.div whileHover={{ scale: 1.1 }} className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light">Asia-Pac</motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light"
+                    >
+                      US-East
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light"
+                    >
+                      EU-West
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light"
+                    >
+                      Asia-Pac
+                    </motion.div>
                   </div>
                 )}
-                {item.content === 'status' && (
+                {item.content === "status" && (
                   <div className="space-y-3 w-2/3">
-                    <motion.div animate={{ width: ['60%', '80%', '60%'] }} transition={{ duration: 2, repeat: Infinity }} className="h-2 bg-emerald-500 rounded-full"></motion.div>
-                    <motion.div animate={{ width: ['70%', '90%', '70%'] }} transition={{ duration: 2, repeat: Infinity, delay: 0.3 }} className="h-2 bg-emerald-400 rounded-full"></motion.div>
-                    <motion.div animate={{ width: ['50%', '75%', '50%'] }} transition={{ duration: 2, repeat: Infinity, delay: 0.6 }} className="h-2 bg-emerald-300 rounded-full"></motion.div>
+                    <motion.div
+                      animate={{ width: ["60%", "80%", "60%"] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="h-2 bg-emerald-500 rounded-full"
+                    ></motion.div>
+                    <motion.div
+                      animate={{ width: ["70%", "90%", "70%"] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+                      className="h-2 bg-emerald-400 rounded-full"
+                    ></motion.div>
+                    <motion.div
+                      animate={{ width: ["50%", "75%", "50%"] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
+                      className="h-2 bg-emerald-300 rounded-full"
+                    ></motion.div>
                   </div>
                 )}
-                {item.content === 'analytics' && (
+                {item.content === "analytics" && (
                   <div className="flex items-end gap-2 h-full">
                     {[40, 60, 75, 50, 85, 70].map((height, i) => (
-                      <motion.div key={i} animate={{ height: [height, height + 20, height] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.15 }} className={`flex-1 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-sm`} style={{ minHeight: `${height}%` }}></motion.div>
+                      <motion.div
+                        key={i}
+                        animate={{ height: [height, height + 20, height] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.15,
+                        }}
+                        className={`flex-1 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-sm`}
+                        style={{ minHeight: `${height}%` }}
+                      ></motion.div>
                     ))}
                   </div>
                 )}
-                {item.content === 'schedule' && (
+                {item.content === "schedule" && (
                   <div className="space-y-3 w-3/4">
-                    {['emerald', 'blue', 'purple'].map((color, i) => (
-                      <motion.div key={i} animate={{ x: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="flex gap-2 items-center">
-                        <div className={`w-3 h-3 rounded-full bg-${color}-500`}></div>
-                        <div className={`flex-1 h-2 bg-${color}-200 rounded`}></div>
+                    {["emerald", "blue", "purple"].map((color, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{ x: [0, 10, 0] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                        }}
+                        className="flex gap-2 items-center"
+                      >
+                        <div
+                          className={`w-3 h-3 rounded-full bg-${color}-500`}
+                        ></div>
+                        <div
+                          className={`flex-1 h-2 bg-${color}-200 rounded`}
+                        ></div>
                       </motion.div>
                     ))}
                   </div>
                 )}
-                {item.content === 'integrations' && (
+                {item.content === "integrations" && (
                   <div className="grid grid-cols-2 gap-4">
-                    {['GH', 'GL', 'GD', 'JP'].map((text, i) => (
-                      <motion.div key={i} whileHover={{ scale: 1.2, rotate: 5 }} className={`w-12 h-12 bg-${['blue', 'red', 'purple', 'orange'][i]}-600 rounded-lg flex items-center justify-center text-white text-xs font-bold`}>
+                    {["GH", "GL", "GD", "JP"].map((text, i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.2, rotate: 5 }}
+                        className={`w-12 h-12 bg-${["blue", "red", "purple", "orange"][i]}-600 rounded-lg flex items-center justify-center text-white text-xs font-bold`}
+                      >
                         {text}
                       </motion.div>
                     ))}
@@ -367,8 +453,12 @@ function FeaturesSection() {
                 )}
               </div>
 
-              <h3 className="text-lg font-light text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">{item.title}</h3>
-              <p className="text-sm text-slate-600 font-light leading-relaxed">{item.description}</p>
+              <h3 className="text-lg font-light text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                {item.title}
+              </h3>
+              <p className="text-sm text-slate-600 font-light leading-relaxed">
+                {item.description}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -376,10 +466,6 @@ function FeaturesSection() {
     </section>
   );
 }
-
-
-
-
 
 // Live Demo Section
 function DemoSection() {
@@ -393,7 +479,9 @@ function DemoSection() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <span className="text-xs text-emerald-600 font-light mb-4 block">LIVE DASHBOARD</span>
+          <span className="text-xs text-emerald-600 font-light mb-4 block">
+            LIVE DASHBOARD
+          </span>
           <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">
             See It In Action
           </h2>
@@ -410,8 +498,12 @@ function DemoSection() {
             {/* Dashboard Header */}
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h3 className="text-lg font-light text-slate-900">Monitoring Dashboard</h3>
-                <p className="text-xs text-slate-600 mt-1 font-light">Real-time system status</p>
+                <h3 className="text-lg font-light text-slate-900">
+                  Monitoring Dashboard
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 font-light">
+                  Real-time system status
+                </p>
               </div>
               <div className="flex gap-2">
                 {[1, 2, 3].map((i) => (
@@ -419,7 +511,11 @@ function DemoSection() {
                     key={i}
                     className="w-3 h-3 bg-emerald-500 rounded-full"
                     animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1.5, delay: i * 0.2, repeat: Infinity }}
+                    transition={{
+                      duration: 1.5,
+                      delay: i * 0.2,
+                      repeat: Infinity,
+                    }}
                   />
                 ))}
               </div>
@@ -427,7 +523,7 @@ function DemoSection() {
 
             {/* Status Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {['API Server', 'Database', 'CDN Service'].map((service, idx) => (
+              {["API Server", "Database", "CDN Service"].map((service, idx) => (
                 <motion.div
                   key={service}
                   className="p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-emerald-200 transition-colors"
@@ -438,14 +534,18 @@ function DemoSection() {
                   viewport={{ once: true }}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-light text-slate-700">{service}</span>
+                    <span className="text-sm font-light text-slate-700">
+                      {service}
+                    </span>
                     <span className="flex items-center gap-2">
                       <motion.div
                         className="w-2 h-2 bg-emerald-500 rounded-full"
                         animate={{ scale: [1, 1.3, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       />
-                      <span className="text-xs text-emerald-600 font-light">Healthy</span>
+                      <span className="text-xs text-emerald-600 font-light">
+                        Healthy
+                      </span>
                     </span>
                   </div>
                   <div className="text-xs text-slate-600 font-light">
@@ -479,24 +579,24 @@ function DemoSection() {
 function BenefitsSection() {
   const benefits = [
     {
-      stat: '98%',
-      label: 'Faster Issue Resolution',
-      icon: '⚡',
+      stat: "98%",
+      label: "Faster Issue Resolution",
+      icon: "⚡",
     },
     {
-      stat: '27K',
-      label: 'Active Monitors',
-      icon: '📊',
+      stat: "27K",
+      label: "Active Monitors",
+      icon: "📊",
     },
     {
-      stat: '99.99%',
-      label: 'Platform Uptime',
-      icon: '✓',
+      stat: "99.99%",
+      label: "Platform Uptime",
+      icon: "✓",
     },
     {
-      stat: '2.3s',
-      label: 'Average Alert Time',
-      icon: '🔔',
+      stat: "2.3s",
+      label: "Average Alert Time",
+      icon: "🔔",
     },
   ];
 
@@ -523,7 +623,9 @@ function BenefitsSection() {
               >
                 {benefit.stat}
               </motion.div>
-              <p className="text-sm text-slate-600 font-light">{benefit.label}</p>
+              <p className="text-sm text-slate-600 font-light">
+                {benefit.label}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -534,7 +636,7 @@ function BenefitsSection() {
 
 // CTA Section
 function CTASection() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -542,7 +644,7 @@ function CTASection() {
     if (email) {
       setSubmitted(true);
       setTimeout(() => {
-        setEmail('');
+        setEmail("");
         setSubmitted(false);
       }, 3000);
     }
@@ -562,7 +664,8 @@ function CTASection() {
             Ready to Monitor Better?
           </h2>
           <p className="text-slate-600 font-light">
-            Join thousands of teams that trust PulseWatch for their uptime monitoring
+            Join thousands of teams that trust PulseWatch for their uptime
+            monitoring
           </p>
         </motion.div>
 
@@ -589,7 +692,7 @@ function CTASection() {
             className="px-6 py-3 bg-emerald-500 text-white rounded-lg text-sm font-light hover:bg-emerald-600 transition-colors whitespace-nowrap disabled:opacity-50"
             disabled={submitted}
           >
-            {submitted ? 'Check Your Email' : 'Get Started'}
+            {submitted ? "Check Your Email" : "Get Started"}
           </motion.button>
         </motion.form>
 
@@ -627,7 +730,9 @@ function Footer() {
                   <path d="M10.5 1.5a2.121 2.121 0 0 0-2.828 2.828l2.121-2.121z" />
                 </svg>
               </div>
-              <span className="text-sm font-light text-slate-900">PulseWatch</span>
+              <span className="text-sm font-light text-slate-900">
+                PulseWatch
+              </span>
             </div>
             <p className="text-xs text-slate-600 font-light">
               Beautiful uptime monitoring for modern teams
@@ -636,20 +741,22 @@ function Footer() {
 
           {[
             {
-              title: 'Product',
-              links: ['Features', 'Pricing', 'Security', 'Status'],
+              title: "Product",
+              links: ["Features", "Pricing", "Security", "Status"],
             },
             {
-              title: 'Company',
-              links: ['Blog', 'About', 'Careers', 'Contact'],
+              title: "Company",
+              links: ["Blog", "About", "Careers", "Contact"],
             },
             {
-              title: 'Resources',
-              links: ['Docs', 'API', 'Community', 'Support'],
+              title: "Resources",
+              links: ["Docs", "API", "Community", "Support"],
             },
           ].map((section) => (
             <div key={section.title}>
-              <h4 className="text-sm font-light text-slate-900 mb-4">{section.title}</h4>
+              <h4 className="text-sm font-light text-slate-900 mb-4">
+                {section.title}
+              </h4>
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link}>
@@ -671,7 +778,7 @@ function Footer() {
             © 2024 PulseWatch. All rights reserved.
           </p>
           <div className="flex gap-4">
-            {['Twitter', 'GitHub', 'LinkedIn'].map((social) => (
+            {["Twitter", "GitHub", "LinkedIn"].map((social) => (
               <a
                 key={social}
                 href="#"

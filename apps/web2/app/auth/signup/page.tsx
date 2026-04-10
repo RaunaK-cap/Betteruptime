@@ -18,6 +18,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const API_BASE_URL = 'http://localhost:4000';
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -41,11 +42,30 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      router.push('/auth/success');
+      const payload = {
+        firstname: formData.firstName,
+        lastname: formData.lastName,
+        username: formData.username,
+        password: formData.password,
+      };
+
+      const res = await fetch(`${API_BASE_URL}/api/v1/users/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors({ submit: data.message || 'Unable to create account.' });
+        return;
+      }
+
+      router.push('/auth/login');
     } catch (error) {
-      setErrors({ submit: 'An error occurred. Please try again.' });
+      setErrors({ submit: 'Unable to reach the server. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +119,7 @@ export default function SignupPage() {
 
         {/* Form */}
         <motion.form onSubmit={handleSubmit} variants={itemVariants} className="space-y-4">
+          {errors.submit && <p className="text-sm text-red-500 font-light">{errors.submit}</p>}
           {/* First Name */}
           <div>
             <label className="block text-xs font-light text-slate-700 mb-2">First Name</label>

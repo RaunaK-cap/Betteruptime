@@ -1,14 +1,13 @@
 import { prisma } from "db";
 import type { Request, Response } from "express";
-import jwt, { verify } from "jsonwebtoken";
-import z from "zod";
+import jwt from "jsonwebtoken";
 import { loginschema, signupschema } from "../../types";
 
 export const signup = async (req: Request, res: Response) => {
   const verifiedbody = signupschema.safeParse(req.body);
   if (!verifiedbody.success) {
-    res.json({
-      message: "invalid data",
+    res.status(400).json({
+      message: "Invalid signup data",
     });
     return;
   }
@@ -35,11 +34,11 @@ export const signup = async (req: Request, res: Response) => {
     });
     console.log(result);
     res.status(201).json({
-      message: "signup successsfull",
+      message: "Signup successful",
     });
   } catch (error) {
-    res.status(411).json({
-      message: "errror while signup , please try again ",
+    res.status(500).json({
+      message: "Error while signing up, please try again",
     });
   }
 };
@@ -63,19 +62,25 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (!result) {
-      res.json({
-        message: "No data found ,signup first",
+      res.status(404).json({
+        message: "No user found, signup first",
       });
     } else {
-      const token = jwt.sign(result?.id, process.env.JWT_SECRET!);
-      res.status(201).json({
-        message: "login successfull",
+      const token = jwt.sign({ userId: result.id }, process.env.JWT_SECRET!);
+      res.status(200).json({
+        message: "Login successful",
         token: token,
+        user: {
+          id: result.id,
+          username: result.username,
+          firstname: result.firstname,
+          lastname: result.lastname,
+        },
       });
     }
   } catch (error) {
-    res.status(501).json({
-      message: "No data found, signup first",
+    res.status(500).json({
+      message: "Error while logging in",
     });
   }
 };
