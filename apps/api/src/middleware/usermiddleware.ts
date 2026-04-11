@@ -1,5 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
+
+interface VerifiedSchema extends JwtPayload {
+  userId: string;
+}
 
 export const middleware = async (
   req: Request,
@@ -13,10 +17,13 @@ export const middleware = async (
     });
     return;
   }
-  const verified = jwt.verify(token!, process.env.JWT_SECRET!);
+  const verified = jwt.verify(
+    token!,
+    process.env.JWT_SECRET!,
+  ) as VerifiedSchema;
   // console.log("decrypted jwt token:", verified);
   if (verified) {
-    req.userID = verified as string;
+    req.userID = verified.userId;
     next();
   } else {
     res.json({
