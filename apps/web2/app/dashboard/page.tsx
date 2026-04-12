@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Plus, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -21,26 +21,163 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type MonitorStatus = "Up" | "Down" | "Pending";
+
 type Monitor = {
   id: string;
   url: string;
-  status: "Up" | "Down";
-  uptime: number;
+  status: MonitorStatus;
+  uptime: string;
   response: string;
   checks: string;
   region: string;
-  incidents: number;
-  trend: number[];
+  lastChecked: string;
 };
+
+type SiteRef = { id: number; url: string };
+
+type Tick = {
+  Response_time_ms: number;
+  Status: string;
+  region_id: number;
+  createdAt: string;
+};
+
+function rowFromWebsite(
+  w: { id: number; url: string; ticks: Tick[] },
+): Monitor {
+  const tick = w.ticks[0];
+  const raw = tick?.Status;
+  let status: MonitorStatus = "Pending";
+  if (raw === "up") status = "Up";
+  if (raw === "down") status = "Down";
+
+  return {
+    id: String(w.id),
+    url: w.url,
+    status,
+    uptime: "—",
+    response: tick ? `${tick.Response_time_ms} ms` : "—",
+    checks: "—",
+    region: tick ? `Region ${tick.region_id}` : "—",
+    lastChecked: tick ? new Date(tick.createdAt).toLocaleString() : "—",
+  };
+}
+
+const API_BASE_URL = "http://localhost:4000"
+
+/** Needed so reloads know which GET /website/:id to call (API has no “list all” route). */
+const SITE_REFS_STORAGE_KEY = "pulsewatch_dashboard_site_refs";
+const POLL_INTERVAL_MS = 30_000;
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [formError, setFormError] = useState("");
+  const [  monitorRows , setmonitorRows] = useState<Monitor[]>([])
+  const [siteRefs, setSiteRefs] = useState<SiteRef[]>([]);
+  const token = localStorage.getItem("authToken")
+  const hydratedFromStorage = useRef(false);
 
-  const handleAddWebsite = () => {
+  // Restore saved website ids on load, then keep them in sync (so refresh keeps your list).
+  useEffect(() => {
+    if (!hydratedFromStorage.current) {
+      hydratedFromStorage.current = true;
+      try {
+        const raw = localStorage.getItem(SITE_REFS_STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as unknown;
+        if (!Array.isArray(parsed)) return;
+        const next: SiteRef[] = [];
+        for (const item of parsed) {
+          if (
+            item &&
+            typeof item === "object" &&
+            "id" in item &&
+            "url" in item &&
+            typeof (item as SiteRef).id === "number" &&
+            typeof (item as SiteRef).url === "string"
+          ) {
+            next.push({ id: (item as SiteRef).id, url: (item as SiteRef).url });
+          }
+        }
+        setSiteRefs(next);
+      } catch {
+        // ignore bad storage
+      }
+      return;
+    }
+    try {
+      localStorage.setItem(SITE_REFS_STORAGE_KEY, JSON.stringify(siteRefs));
+    } catch {
+      // ignore quota / private mode
+    }
+  }, [siteRefs]);
+
+  const refreshRowsFromRefs = useCallback(async () => {
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken || siteRefs.length === 0) {
+      setmonitorRows([]);
+      return;
+    }
+
+    const next: Monitor[] = [];
+    const still: SiteRef[] = [];
+
+    for (const ref of siteRefs) {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/api/v2/content/website/${ref.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: authToken,
+            },
+          },
+        );
+        const data = await res.json();
+        const w = data.websitedata as {
+          id: number;
+          url: string;
+          ticks: Tick[];
+        } | null;
+        if (!w) continue;
+        still.push({ id: w.id, url: w.url });
+        next.push(rowFromWebsite(w));
+      } catch {
+        // skip failed id
+      }
+    }
+
+    setmonitorRows(next);
+    setSiteRefs((prev) => {
+      const same =
+        prev.length === still.length &&
+        prev.every(
+          (p, i) =>
+            still[i] !== undefined &&
+            p.id === still[i].id &&
+            p.url === still[i].url,
+        );
+      return same ? prev : still;
+    });
+  }, [siteRefs]);
+
+  useEffect(() => {
+    void refreshRowsFromRefs();
+  }, [refreshRowsFromRefs]);
+
+  // Poll GET /website/:id on a timer so the table stays fresh while you stay on the page.
+  useEffect(() => {
+    const t = setInterval(() => {
+      void refreshRowsFromRefs();
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(t);
+  }, [refreshRowsFromRefs]);
+
+  const handleAddWebsite = async() => {
     const normalizedUrl = websiteUrl.trim();
 
     if (!normalizedUrl) {
@@ -48,37 +185,63 @@ export default function DashboardPage() {
       return;
     }
 
-    if (monitors.some((monitor) => monitor.url === normalizedUrl)) {
-      setFormError("This website already exists.");
+    // TODO: Implement add website API call here.
+    // TODO: After API success, update your monitor list state with backend data.
+
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) {
+      setFormError("Log in first.");
       return;
     }
 
-    const nextMonitor: Monitor = {
-      id: crypto.randomUUID(),
-      url: normalizedUrl,
-      status: "Up",
-      uptime: 100,
-      response: "190 ms",
-      checks: "30 sec",
-      region: "Mumbai",
-      incidents: 0,
-      trend: [100, 99, 100, 100, 99, 100, 100],
-    };
-
-    setMonitors((current) => [nextMonitor, ...current]);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v2/content/website`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authToken,
+        },
+        body: JSON.stringify({ url: normalizedUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.message ?? "Request failed.");
+        return;
+      }
+      setSiteRefs((prev) => [
+        ...prev,
+        { id: data.websiteID as number, url: normalizedUrl },
+      ]);
+    } catch (error) {
+      setFormError("Could not reach the server.");
+      return;
+    }
+    setShowModal(false);
     setWebsiteUrl("");
     setFormError("");
-    setShowModal(false);
-
-    // Backend hook:
-    // Add your create-monitor API call here.
   };
 
-  const handleDelete = (id: string) => {
-    setMonitors((current) => current.filter((monitor) => monitor.id !== id));
+  const handleDelete = async (id: string) => {
+    // TODO: Implement delete website API call here using `id`.
+    // TODO: After API success, remove the deleted monitor from your state.
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) return;
 
-    // Backend hook:
-    // Add your delete-monitor API call here.
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v2/content/websitedelete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authToken,
+        },
+        body: JSON.stringify({ websiteID: Number(id) }),
+      });
+      const data = await res.json();
+      if (!res.ok) return;
+      setSiteRefs((prev) => prev.filter((r) => String(r.id) !== id));
+    } catch {
+      // ignore
+    }
   };
 
   return (
@@ -109,88 +272,81 @@ export default function DashboardPage() {
               Website monitors
             </CardTitle>
             <CardDescription className="text-base text-slate-500">
-              Table-first view with delete action on every URL.
+              UI only. Add your own API integration in the marked TODO sections.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="pl-4">Website</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Uptime</TableHead>
-                  <TableHead>Response</TableHead>
-                  <TableHead>Checks</TableHead>
-                  <TableHead>Trend</TableHead>
-                  <TableHead className="pr-4 text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {monitors.map((monitor) => (
-                  <TableRow key={monitor.id}>
-                    <TableCell className="pl-4">
-                      <div className="space-y-1">
-                        <p className="font-semibold text-slate-700">
-                          {monitor.url}
-                        </p>
-                        <p className="text-sm text-slate-400">
-                          Region: {monitor.region} | Incidents:{" "}
-                          {monitor.incidents}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
-                          monitor.status === "Up"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-600"
-                        }`}
-                      >
-                        {monitor.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-semibold text-slate-700">
-                      {monitor.uptime.toFixed(2)}%
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {monitor.response}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {monitor.checks}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex h-12 items-end gap-1">
-                        {monitor.trend.map((point, index) => (
-                          <div
-                            key={`${monitor.id}-${index}`}
-                            className={`w-4 rounded-t-sm ${
-                              point >= 95
-                                ? "bg-emerald-400"
-                                : point >= 90
-                                  ? "bg-amber-400"
-                                  : "bg-rose-400"
-                            }`}
-                            style={{ height: `${Math.max(16, point * 0.5)}px` }}
-                          />
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="pr-4 text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(monitor.id)}
-                        className="rounded-full border-rose-200 bg-white text-rose-500 hover:bg-rose-50 hover:text-rose-600"
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </Button>
-                    </TableCell>
+          <CardContent className="space-y-4">
+            {monitorRows.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-slate-500">
+                No websites added yet. Add one to start monitoring.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-4">Website</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Uptime</TableHead>
+                    <TableHead>Response</TableHead>
+                    <TableHead>Checks</TableHead>
+                    <TableHead>Last checked</TableHead>
+                    <TableHead className="pr-4 text-right">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {monitorRows.map((monitor) => (
+                    <TableRow key={monitor.id}>
+                      <TableCell className="pl-4">
+                        <div className="space-y-1">
+                          <p className="font-semibold text-slate-700">
+                            {monitor.url}
+                          </p>
+                          <p className="text-sm text-slate-400">
+                            {monitor.region}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
+                            monitor.status === "Up"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : monitor.status === "Down"
+                                ? "bg-rose-100 text-rose-600"
+                                : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {monitor.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-semibold text-slate-700">
+                        {monitor.uptime}
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {monitor.response}
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {monitor.checks}
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {monitor.lastChecked}
+                      </TableCell>
+                      <TableCell className="pr-4 text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(monitor.id)}
+                          className="rounded-full border-rose-200 bg-white text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                        >
+                          <Trash2 className="size-4" />
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -227,7 +383,9 @@ export default function DashboardPage() {
                 value={websiteUrl}
                 onChange={(event) => {
                   setWebsiteUrl(event.target.value);
-                  if (formError) setFormError("");
+                  if (formError) {
+                    setFormError("");
+                  }
                 }}
                 placeholder="https://yourwebsite.com"
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500"
