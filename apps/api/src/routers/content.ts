@@ -1,4 +1,4 @@
-import router, { Router } from "express";
+import router from "express";
 import { deletewebsite, getwebsite, website } from "../controllers/content";
 import { middleware } from "../middleware/usermiddleware";
 

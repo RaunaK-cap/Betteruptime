@@ -1,808 +1,448 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import {
+  Activity,
+  Bell,
+  ChevronRight,
+  Clock3,
+  Globe,
+  MoonStar,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 
-// Header Component
+import Pipeline from "@/components/pipeline";
+import { ModeToggle } from "@/components/themetoggler";
+import { Button } from "@/components/ui/button";
+
+const features = [
+  {
+    title: "Instant incident detection",
+    description:
+      "Track checks, response anomalies, and degraded services before customers notice.",
+    icon: Bell,
+  },
+  {
+    title: "Global coverage",
+    description:
+      "Run monitors from multiple regions and compare results with a clean operational view.",
+    icon: Globe,
+  },
+  {
+    title: "Status transparency",
+    description:
+      "Publish reliable status communication with a visual system that matches your product quality.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Actionable response data",
+    description:
+      "See latency, uptime, and alert timing together so the next fix is obvious.",
+    icon: Activity,
+  },
+];
+
+const metrics = [
+  { value: "27K+", label: "active monitors" },
+  { value: "99.99%", label: "average uptime" },
+  { value: "2.3s", label: "median alert time" },
+];
+
+const highlightCards = [
+  {
+    eyebrow: "Live health",
+    title: "A calmer view of operational noise.",
+    description:
+      "The landing page now carries the same quiet dashboard language in both themes: restrained surfaces, muted borders, and one clear accent.",
+  },
+  {
+    eyebrow: "Theme aware",
+    title: "Dark mode feels designed, not inverted.",
+    description:
+      "Background depth, cards, hero gradients, and secondary actions adapt cleanly without losing readability or contrast.",
+  },
+];
+
+function SectionIntro({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="mx-auto mb-14 max-w-3xl text-center">
+      <p className="mb-3 text-xs font-light uppercase tracking-[0.28em] text-primary/80">
+        {eyebrow}
+      </p>
+      <h2 className="text-3xl font-extralight tracking-tight text-foreground md:text-5xl">
+        {title}
+      </h2>
+      <p className="mt-4 text-sm font-light leading-7 text-muted-foreground md:text-base">
+        {description}
+      </p>
+    </div>
+  );
+}
+
 function Header() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <motion.header
-      initial={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/80 backdrop-blur-md border-b border-gray-200"
-          : "bg-transparent"
-      }`}
+      transition={{ duration: 0.6 }}
+      className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl"
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <motion.div
-          className="flex items-center gap-2"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-            <svg
-              className="w-5 h-5 text-white animate-heart-pulse"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M10.5 1.5a2.121 2.121 0 0 0-2.828 2.828l2.121-2.121z" />
-              <path d="M10 3c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z" />
-            </svg>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+            <Activity className="h-4 w-4" />
           </div>
-          <span className="text-sm font-light text-slate-900">PulseWatch</span>
-        </motion.div>
+          <div>
+            <p className="text-sm font-medium tracking-tight text-foreground">
+              PulseWatch
+            </p>
+            <p className="text-[11px] font-light text-muted-foreground">
+              Better uptime visibility
+            </p>
+          </div>
+        </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
-          {["Features", "Integrations", "Pricing", "Docs"].map((item) => (
-            <motion.a
-              key={item}
-              href="#"
-              className="text-xs text-slate-600 hover:text-slate-900 transition-colors font-light"
-              whileHover={{ y: -2 }}
-            >
-              {item}
-            </motion.a>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <Link href="/auth/login">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-xs px-4 py-2 text-slate-600 hover:text-slate-900 font-light border border-transparent hover:border-slate-200 rounded-lg transition-all"
-            >
-              Sign In
-            </motion.button>
-          </Link>
-          <Link href="/auth/login">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-xs px-4 py-2 bg-emerald-500 text-white rounded-lg font-light hover:bg-emerald-600 transition-colors"
-            >
-              Get Started Free
-            </motion.button>
-          </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="hidden rounded-full px-4 text-xs font-light text-muted-foreground sm:inline-flex"
+          >
+            <Link href="/auth/login">Sign in</Link>
+          </Button>
+          <ModeToggle />
+          <Button
+            asChild
+            size="sm"
+            className="rounded-full px-4 text-xs font-normal shadow-sm shadow-primary/20"
+          >
+            <Link href="/auth/signup">Start free</Link>
+          </Button>
         </div>
       </div>
     </motion.header>
   );
 }
 
-// Hero Section with Animated Heartbeat
 function HeroSection() {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCount((prev) => (prev + Math.floor(Math.random() * 5) + 1) % 100000);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-32 overflow-hidden">
-      {/* Animated background gradient */}
+    <section className="relative overflow-hidden px-6 pb-20 pt-16 md:pb-28 md:pt-24">
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-40 left-10 w-72 h-72 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-32 right-10 w-72 h-72 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute left-[8%] top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 right-[12%] h-72 w-72 rounded-full bg-sky-500/10 blur-3xl dark:bg-sky-400/10" />
+        <div className="absolute inset-x-0 top-0 h-full bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_45%)] dark:bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_40%)]" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="max-w-4xl mx-auto text-center"
-      >
+      <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 mb-8"
-        >
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse-glow"></div>
-          <span className="text-xs text-emerald-700 font-light">
-            Real-time monitoring is live
-          </span>
-        </motion.div>
-
-        <motion.h1
-          className="text-5xl md:text-7xl font-light text-slate-900 mb-6 tracking-tight"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          transition={{ duration: 0.7 }}
         >
-          Know Your Systems Are{" "}
-          <span className="text-emerald-500">Always Live</span>
-        </motion.h1>
-
-        <motion.p
-          className="text-base md:text-lg text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed font-light"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          Beautiful uptime monitoring and incident management for teams that
-          refuse to compromise. Detect issues in seconds, not hours.
-        </motion.p>
-
-        <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-        >
-          <Link href="/auth/login">
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 20px 40px rgba(16, 185, 129, 0.2)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-emerald-500 text-white rounded-lg text-sm font-light hover:bg-emerald-600 transition-colors glass"
-            >
-              Get Started Free
-            </motion.button>
-          </Link>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-8 py-3 border border-slate-200 text-slate-900 rounded-lg text-sm font-light hover:bg-slate-50 transition-colors"
-          >
-            View Demo
-          </motion.button>
-        </motion.div>
-
-        {/* Animated Metrics */}
-        <motion.div
-          className="flex flex-col sm:flex-row justify-center gap-8 text-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">
-              27K+
-            </span>
-            <span className="text-slate-600 text-xs">Active Monitors</span>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-light text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            Monitoring that stays readable in both modes
           </div>
-          <div className="w-px bg-slate-200"></div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">
-              99.99%
-            </span>
-            <span className="text-slate-600 text-xs">Average Uptime</span>
-          </div>
-          <div className="w-px bg-slate-200"></div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl font-light text-emerald-500 animate-glow-pulse">
-              2.3s
-            </span>
-            <span className="text-slate-600 text-xs">Alert Time</span>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Scroll Indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      >
-        <svg
-          className="w-5 h-5 text-slate-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M19 14l-7 7m0 0l-7-7m7 7V3"
-          />
-        </svg>
-      </motion.div>
-    </section>
-  );
-}
-
-// Bento Grid Feature Items
-interface BentoItemProps {
-  className?: string;
-  delay?: number;
-  children: React.ReactNode;
-}
-
-function BentoItem({ className = "", delay = 0, children }: BentoItemProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
-      viewport={{ once: true, margin: "-100px" }}
-      whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)" }}
-      className={`glass rounded-xl p-8 transition-all duration-300 ${className}`}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-// Features Section with Animated Bento Grid
-function FeaturesSection() {
-  const bentoItems = [
-    {
-      title: "Instant Alerts",
-      description:
-        "Get notified instantly via SMS, email, Slack, or voice call when issues occur",
-      colSpan: "lg:col-span-2",
-      rowSpan: "lg:row-span-1",
-      content: "alerts",
-    },
-    {
-      title: "Multi-Location Monitoring",
-      description:
-        "Monitor from multiple geographic locations to eliminate false positives",
-      colSpan: "lg:col-span-1",
-      rowSpan: "lg:row-span-1",
-      content: "location",
-    },
-    {
-      title: "Status Pages",
-      description:
-        "Beautiful status pages to keep your customers informed in real-time",
-      colSpan: "lg:col-span-1",
-      rowSpan: "lg:row-span-1",
-      content: "status",
-    },
-    {
-      title: "Deep Insights",
-      description:
-        "Detailed analytics with screenshots, logs, and response times for debugging",
-      colSpan: "lg:col-span-1",
-      rowSpan: "lg:row-span-1",
-      content: "analytics",
-    },
-    {
-      title: "On-Call Scheduling",
-      description:
-        "Smart scheduling system for on-call rotations and incident escalation",
-      colSpan: "lg:col-span-1",
-      rowSpan: "lg:row-span-1",
-      content: "schedule",
-    },
-    {
-      title: "API Integrations",
-      description:
-        "Seamless integrations with your favorite tools and platforms",
-      colSpan: "lg:col-span-1",
-      rowSpan: "lg:row-span-1",
-      content: "integrations",
-    },
-  ];
-
-  return (
-    <section className="py-24 px-6 bg-gradient-to-b from-white to-slate-50">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <span className="text-xs text-emerald-600 font-light mb-4 block">
-            POWERFUL FEATURES
-          </span>
-          <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight">
-            Everything You Need To Monitor
-          </h2>
-          <p className="text-slate-600 font-light max-w-2xl mx-auto">
-            Comprehensive monitoring tools designed for modern DevOps teams
+          <h1 className="max-w-4xl text-5xl font-extralight tracking-tight text-foreground md:text-7xl">
+            Keep your landing experience as reliable as your uptime data.
+          </h1>
+          <p className="mt-6 max-w-2xl text-base font-light leading-8 text-muted-foreground md:text-lg">
+            PulseWatch gives teams a focused monitoring workflow, instant alerting,
+            and a calm incident surface. The landing page now follows that same
+            visual logic in light and dark mode.
           </p>
-        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
-          {bentoItems.map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-100px" }}
-              whileHover={{ y: -8, transition: { duration: 0.3 } }}
-              className={`${item.colSpan} ${item.rowSpan} bg-white/50 backdrop-blur-sm rounded-2xl p-8 border border-white/60 hover:border-emerald-300/50 hover:bg-white/70 transition-all duration-300 cursor-pointer group`}
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full px-6 text-sm shadow-lg shadow-primary/20"
             >
-              {/* Visual Content Area */}
-              <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-50 rounded-xl mb-6 flex items-center justify-center overflow-hidden group-hover:from-emerald-50 group-hover:to-slate-50 transition-colors duration-300">
-                {item.content === "alerts" && (
-                  <div className="w-full h-full flex items-center justify-center gap-4">
-                    <motion.div
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center"
-                    >
-                      <span className="text-2xl">💬</span>
-                    </motion.div>
-                    <motion.div
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-                      className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center"
-                    >
-                      <span className="text-2xl">📧</span>
-                    </motion.div>
-                    <motion.div
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-                      className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center"
-                    >
-                      <span className="text-2xl">🔴</span>
-                    </motion.div>
-                  </div>
-                )}
-                {item.content === "location" && (
-                  <div className="flex flex-wrap gap-4 justify-center">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light"
-                    >
-                      US-East
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light"
-                    >
-                      EU-West
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-full text-xs font-light"
-                    >
-                      Asia-Pac
-                    </motion.div>
-                  </div>
-                )}
-                {item.content === "status" && (
-                  <div className="space-y-3 w-2/3">
-                    <motion.div
-                      animate={{ width: ["60%", "80%", "60%"] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="h-2 bg-emerald-500 rounded-full"
-                    ></motion.div>
-                    <motion.div
-                      animate={{ width: ["70%", "90%", "70%"] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
-                      className="h-2 bg-emerald-400 rounded-full"
-                    ></motion.div>
-                    <motion.div
-                      animate={{ width: ["50%", "75%", "50%"] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
-                      className="h-2 bg-emerald-300 rounded-full"
-                    ></motion.div>
-                  </div>
-                )}
-                {item.content === "analytics" && (
-                  <div className="flex items-end gap-2 h-full">
-                    {[40, 60, 75, 50, 85, 70].map((height, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ height: [height, height + 20, height] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: i * 0.15,
-                        }}
-                        className={`flex-1 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-sm`}
-                        style={{ minHeight: `${height}%` }}
-                      ></motion.div>
-                    ))}
-                  </div>
-                )}
-                {item.content === "schedule" && (
-                  <div className="space-y-3 w-3/4">
-                    {["emerald", "blue", "purple"].map((color, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ x: [0, 10, 0] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: i * 0.2,
-                        }}
-                        className="flex gap-2 items-center"
-                      >
-                        <div
-                          className={`w-3 h-3 rounded-full bg-${color}-500`}
-                        ></div>
-                        <div
-                          className={`flex-1 h-2 bg-${color}-200 rounded`}
-                        ></div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-                {item.content === "integrations" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    {["GH", "GL", "GD", "JP"].map((text, i) => (
-                      <motion.div
-                        key={i}
-                        whileHover={{ scale: 1.2, rotate: 5 }}
-                        className={`w-12 h-12 bg-${["blue", "red", "purple", "orange"][i]}-600 rounded-lg flex items-center justify-center text-white text-xs font-bold`}
-                      >
-                        {text}
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <h3 className="text-lg font-light text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                {item.title}
-              </h3>
-              <p className="text-sm text-slate-600 font-light leading-relaxed">
-                {item.description}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Live Demo Section
-function DemoSection() {
-  return (
-    <section className="py-24 px-6 bg-white">
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <span className="text-xs text-emerald-600 font-light mb-4 block">
-            LIVE DASHBOARD
-          </span>
-          <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">
-            See It In Action
-          </h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="glass rounded-2xl p-8 md:p-12 overflow-hidden"
-        >
-          <div className="space-y-6">
-            {/* Dashboard Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-              <div>
-                <h3 className="text-lg font-light text-slate-900">
-                  Monitoring Dashboard
-                </h3>
-                <p className="text-xs text-slate-600 mt-1 font-light">
-                  Real-time system status
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {[1, 2, 3].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-3 h-3 bg-emerald-500 rounded-full"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{
-                      duration: 1.5,
-                      delay: i * 0.2,
-                      repeat: Infinity,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Status Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {["API Server", "Database", "CDN Service"].map((service, idx) => (
-                <motion.div
-                  key={service}
-                  className="p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-emerald-200 transition-colors"
-                  whileHover={{ y: -4 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: idx * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-light text-slate-700">
-                      {service}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <motion.div
-                        className="w-2 h-2 bg-emerald-500 rounded-full"
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                      <span className="text-xs text-emerald-600 font-light">
-                        Healthy
-                      </span>
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-600 font-light">
-                    Uptime: <span className="text-emerald-600">99.99%</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Mini Chart */}
-            <div className="p-4 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-lg border border-slate-200 h-32 flex items-end gap-1 justify-around">
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="flex-1 bg-gradient-to-t from-emerald-400 to-emerald-500 rounded-t opacity-70 hover:opacity-100 transition-opacity"
-                  initial={{ height: 0 }}
-                  whileInView={{ height: `${Math.random() * 100 + 20}%` }}
-                  transition={{ duration: 0.8, delay: i * 0.05 }}
-                  viewport={{ once: true }}
-                />
-              ))}
-            </div>
+              <Link href="/auth/signup">
+                Start monitoring
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+              className="rounded-full px-6 text-sm"
+            >
+              <Link href="/dashboard">Open dashboard</Link>
+            </Button>
           </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
 
-// Benefits Section
-function BenefitsSection() {
-  const benefits = [
-    {
-      stat: "98%",
-      label: "Faster Issue Resolution",
-      icon: "⚡",
-    },
-    {
-      stat: "27K",
-      label: "Active Monitors",
-      icon: "📊",
-    },
-    {
-      stat: "99.99%",
-      label: "Platform Uptime",
-      icon: "✓",
-    },
-    {
-      stat: "2.3s",
-      label: "Average Alert Time",
-      icon: "🔔",
-    },
-  ];
-
-  return (
-    <section className="py-24 px-6 bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {benefits.map((benefit, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <div className="mb-4 text-4xl">{benefit.icon}</div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {metrics.map((metric, index) => (
               <motion.div
-                className="text-4xl md:text-5xl font-light text-emerald-600 mb-2"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 1, delay: idx * 0.1 + 0.3 }}
-                viewport={{ once: true }}
+                key={metric.label}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 + index * 0.08 }}
+                className="rounded-3xl border border-border/70 bg-card/70 px-5 py-4 backdrop-blur-sm"
               >
-                {benefit.stat}
+                <p className="text-2xl font-extralight text-foreground md:text-3xl">
+                  {metric.value}
+                </p>
+                <p className="mt-1 text-xs font-light uppercase tracking-[0.22em] text-muted-foreground">
+                  {metric.label}
+                </p>
               </motion.div>
-              <p className="text-sm text-slate-600 font-light">
-                {benefit.label}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// CTA Section
-function CTASection() {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-      setTimeout(() => {
-        setEmail("");
-        setSubmitted(false);
-      }, 3000);
-    }
-  };
-
-  return (
-    <section className="py-24 px-6 bg-white">
-      <div className="max-w-2xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">
-            Ready to Monitor Better?
-          </h2>
-          <p className="text-slate-600 font-light">
-            Join thousands of teams that trust PulseWatch for their uptime
-            monitoring
-          </p>
-        </motion.div>
-
-        <motion.form
-          onSubmit={handleSubmit}
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="glass rounded-xl p-8 flex flex-col sm:flex-row gap-4"
-        >
-          <input
-            type="email"
-            placeholder="Enter your email..."
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 px-4 py-3 bg-transparent border-b border-slate-300 focus:border-emerald-500 focus:outline-none text-sm font-light placeholder-slate-400 transition-colors"
-            disabled={submitted}
-          />
-          <motion.button
-            type="submit"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-6 py-3 bg-emerald-500 text-white rounded-lg text-sm font-light hover:bg-emerald-600 transition-colors whitespace-nowrap disabled:opacity-50"
-            disabled={submitted}
-          >
-            {submitted ? "Check Your Email" : "Get Started"}
-          </motion.button>
-        </motion.form>
-
-        <AnimatePresence>
-          {submitted && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="text-center mt-6 text-sm text-emerald-600 font-light"
-            >
-              ✓ Check your email to get started!
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </section>
-  );
-}
-
-// Footer
-function Footer() {
-  return (
-    <footer className="border-t border-slate-200 bg-slate-50 py-16 px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 bg-emerald-500 rounded-md flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10.5 1.5a2.121 2.121 0 0 0-2.828 2.828l2.121-2.121z" />
-                </svg>
-              </div>
-              <span className="text-sm font-light text-slate-900">
-                PulseWatch
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 font-light">
-              Beautiful uptime monitoring for modern teams
-            </p>
-          </div>
-
-          {[
-            {
-              title: "Product",
-              links: ["Features", "Pricing", "Security", "Status"],
-            },
-            {
-              title: "Company",
-              links: ["Blog", "About", "Careers", "Contact"],
-            },
-            {
-              title: "Resources",
-              links: ["Docs", "API", "Community", "Support"],
-            },
-          ].map((section) => (
-            <div key={section.title}>
-              <h4 className="text-sm font-light text-slate-900 mb-4">
-                {section.title}
-              </h4>
-              <ul className="space-y-2">
-                {section.links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-xs text-slate-600 hover:text-slate-900 font-light transition-colors"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-600 font-light">
-            © 2024 PulseWatch. All rights reserved.
-          </p>
-          <div className="flex gap-4">
-            {["Twitter", "GitHub", "LinkedIn"].map((social) => (
-              <a
-                key={social}
-                href="#"
-                className="text-xs text-slate-600 hover:text-slate-900 font-light transition-colors"
-              >
-                {social}
-              </a>
             ))}
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="relative"
+        >
+          <div className="rounded-[2rem] border border-border/70 bg-card/80 p-5 shadow-2xl shadow-black/5 backdrop-blur-xl dark:shadow-black/30">
+            <div className="mb-5 flex items-center justify-between border-b border-border/70 pb-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Monitoring dashboard
+                </p>
+                <p className="mt-1 text-xs font-light text-muted-foreground">
+                  Theme-synced preview
+                </p>
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-light text-primary">
+                <span className="h-2 w-2 rounded-full bg-primary" />
+                All systems normal
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                ["API Gateway", "99.99%", "184ms"],
+                ["Auth Service", "99.97%", "236ms"],
+                ["Checkout Flow", "99.95%", "311ms"],
+              ].map(([name, uptime, latency]) => (
+                <div
+                  key={name}
+                  className="rounded-2xl border border-border/60 bg-background/80 px-4 py-3"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_12px_rgba(16,185,129,0.55)]" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{name}</p>
+                        <p className="text-[11px] font-light text-muted-foreground">
+                          Operational
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-foreground">{uptime}</p>
+                      <p className="text-[11px] font-light text-muted-foreground">
+                        {latency}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-3xl border border-border/60 bg-gradient-to-br from-primary/10 via-background to-sky-500/10 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Response curve
+                  </p>
+                  <p className="text-[11px] font-light text-muted-foreground">
+                    Last 12 checks
+                  </p>
+                </div>
+                <Clock3 className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex h-28 items-end gap-2">
+                {[38, 52, 44, 63, 57, 68, 61, 73, 62, 79, 72, 84].map(
+                  (height, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${height}%` }}
+                      transition={{ duration: 0.55, delay: 0.05 * index }}
+                      className="flex-1 rounded-t-full bg-gradient-to-t from-primary to-emerald-300 dark:to-emerald-200"
+                    />
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute -bottom-5 -left-5 hidden rounded-2xl border border-border/70 bg-background/85 px-4 py-3 backdrop-blur-xl md:block">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <MoonStar className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-foreground">
+                  Theme toggle enabled
+                </p>
+                <p className="text-[11px] font-light text-muted-foreground">
+                  Landing page now matches dashboard behavior
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function HighlightsSection() {
+  return (
+    <section className="px-6 py-8 md:py-14">
+      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
+        {highlightCards.map((card, index) => (
+          <motion.div
+            key={card.title}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: index * 0.08 }}
+            viewport={{ once: true, margin: "-100px" }}
+            className="rounded-[2rem] border border-border/70 bg-card/75 p-8 backdrop-blur-sm"
+          >
+            <p className="text-xs font-light uppercase tracking-[0.24em] text-primary/80">
+              {card.eyebrow}
+            </p>
+            <h3 className="mt-4 text-2xl font-extralight tracking-tight text-foreground">
+              {card.title}
+            </h3>
+            <p className="mt-3 max-w-xl text-sm font-light leading-7 text-muted-foreground">
+              {card.description}
+            </p>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeaturesSection() {
+  return (
+    <section className="px-6 py-20">
+      <div className="mx-auto max-w-7xl">
+        <SectionIntro
+          eyebrow="Capabilities"
+          title="A cleaner product story across both themes."
+          description="Each section now uses the same design tokens as the dashboard, so the landing page feels like part of the product instead of a separate template."
+        />
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+
+            return (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: index * 0.08 }}
+                viewport={{ once: true, margin: "-100px" }}
+                className="group rounded-[1.75rem] border border-border/70 bg-card/70 p-6 backdrop-blur-sm transition-colors hover:border-primary/30 hover:bg-card"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-5 text-lg font-medium tracking-tight text-foreground">
+                  {feature.title}
+                </h3>
+                <p className="mt-3 text-sm font-light leading-7 text-muted-foreground">
+                  {feature.description}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CTASection() {
+  return (
+    <section className="px-6 pb-24 pt-10">
+      <div className="mx-auto max-w-5xl rounded-[2rem] border border-border/70 bg-gradient-to-br from-card via-card to-primary/5 p-8 shadow-xl shadow-black/5 dark:shadow-black/25 md:p-12">
+        <SectionIntro
+          eyebrow="Get started"
+          title="Put the same clarity into your monitoring workflow."
+          description="You asked for the theme toggle on the landing page and for the entire page to respect light and dark mode. The landing experience now does that while preserving the existing PulseWatch tone."
+        />
+
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button
+            asChild
+            size="lg"
+            className="rounded-full px-6 text-sm shadow-lg shadow-primary/20"
+          >
+            <Link href="/auth/signup">Create account</Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            asChild
+            className="rounded-full px-6 text-sm"
+          >
+            <Link href="/dashboard">Preview dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-border/70 px-6 py-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-5 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="font-medium text-foreground">PulseWatch</p>
+          <p className="mt-1 text-xs font-light">
+            Monitoring surfaces designed to stay readable in light and dark mode.
+          </p>
+        </div>
+        <div className="flex items-center gap-5 text-xs font-light">
+          {["Features", "Docs", "Pricing"].map((item) => (
+            <span key={item} className="text-muted-foreground">
+              {item}
+            </span>
+          ))}
         </div>
       </div>
     </footer>
   );
 }
 
-// Main Page Component
 export default function Page() {
   return (
-    <main className="overflow-x-hidden">
+    <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <div className="absolute inset-x-0 top-0 -z-10 h-[32rem] bg-gradient-to-b from-primary/[0.06] via-transparent to-transparent dark:from-primary/[0.1]" />
       <Header />
       <HeroSection />
+      <HighlightsSection />
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="rounded-[2rem] border border-border/70 bg-card/55 backdrop-blur-sm">
+          <Pipeline />
+        </div>
+      </div>
       <FeaturesSection />
-      <DemoSection />
-      <BenefitsSection />
       <CTASection />
       <Footer />
     </main>

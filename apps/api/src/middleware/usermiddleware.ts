@@ -21,7 +21,6 @@ export const middleware = async (
     token!,
     process.env.JWT_SECRET!,
   ) as VerifiedSchema;
-  // console.log("decrypted jwt token:", verified);
   if (verified) {
     req.userID = verified.userId;
     next();

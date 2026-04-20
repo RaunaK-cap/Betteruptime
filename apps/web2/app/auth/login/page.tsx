@@ -1,231 +1,113 @@
-"use client";
-
-import React, { useState } from "react";
+"use client"
+import { useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {ModeToggle} from "@/components/themetoggler";
+import Link from "next/link";
 
-export default function LoginPage() {
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
+const TOKEN_STORAGE_KEY = "pulsewatch_token";
+
+export default function Login() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const API_BASE_URL = "http://localhost:4000";
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.username.trim()) newErrors.username = "Username is required";
-    if (!formData.password) newErrors.password = "Password is required";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
 
-    setIsLoading(true);
+    setIsSubmitting(true);
+    setErrorMessage("");
+
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/users/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(form),
       });
-      const data = await res.json();
 
-      if (!res.ok) {
-        setErrors({
-          submit: data.message || "Invalid credentials. Please try again.",
-        });
-        return;
+      const payload = (await response.json()) as { token?: string; message?: string };
+
+      if (!response.ok || !payload.token) {
+        throw new Error(payload.message ?? "Login failed.");
       }
 
-      localStorage.setItem("authToken", data.token);
-      localStorage.setItem("authUser", JSON.stringify(data.user));
-      if (data.token) {
-        router.push("/dashboard");
-      }
+      window.localStorage.setItem(TOKEN_STORAGE_KEY, payload.token);
+      router.push("/dashboard");
     } catch (error) {
-      setErrors({ submit: "Unable to reach the server. Please try again." });
+      setErrorMessage(error instanceof Error ? error.message : "Login failed.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, staggerChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 },
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white to-slate-50 flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-6 relative">
+      <div className="absolute top-4 right-4"><ModeToggle /></div>
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="w-full max-w-md"
+        className="w-full max-w-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        {/* Header */}
-        <motion.div variants={itemVariants} className="text-center mb-8">
-          <Link href="/" className="inline-block mb-8">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 justify-center"
-            >
-              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10.5 1.5a2.121 2.121 0 0 0-2.828 2.828l2.121-2.121z" />
-                </svg>
-              </div>
-              <span className="text-sm font-light text-slate-900">
-                PulseWatch
-              </span>
-            </motion.div>
-          </Link>
-          <h1 className="text-3xl md:text-4xl font-light text-slate-900 mb-2">
-            Welcome Back
-          </h1>
-          <p className="text-slate-600 font-light">Sign in to your account</p>
-        </motion.div>
+        <Link href="/" className="text-xs font-medium tracking-tight block mb-10">
+          BetterUptime
+        </Link>
 
-        {/* Form */}
-        <motion.form
-          onSubmit={handleSubmit}
-          variants={itemVariants}
-          className="space-y-4"
-        >
-          {errors.submit && (
-            <p className="text-sm text-red-800 font-light">{errors.submit}</p>
-          )}
-          {/* Username */}
-          <div>
-            <label className="block text-xs font-light text-slate-700 mb-2">
-              Username
-            </label>
-            <motion.input
-              whileFocus={{ scale: 1.02 }}
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Enter your username"
-              className={`w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-light text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors ${
-                errors.username ? "border-red-500" : ""
-              }`}
+        <h1 className="text-xl font-extralight tracking-tight mb-1">Welcome back</h1>
+        <p className="text-xs text-muted-foreground font-light mb-8">
+          Sign in to your account to continue.
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {errorMessage ? (
+            <div className="rounded-lg border border-[hsl(var(--destructive)/0.3)] bg-[hsl(var(--destructive)/0.06)] px-3 py-2 text-[11px] font-light text-[hsl(var(--destructive))]">
+              {errorMessage}
+            </div>
+          ) : null}
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-light text-muted-foreground">Username</Label>
+            <Input
+              placeholder="your-username"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className="h-9 text-xs font-light rounded-lg border-border bg-background placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-foreground/20"
             />
-            {errors.username && (
-              <p className="text-xs text-red-500 mt-1 font-light">
-                {errors.username}
-              </p>
-            )}
           </div>
 
-          {/* Password */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-light text-slate-700">
-                Password
-              </label>
-              <Link
-                href="#"
-                className="text-xs text-emerald-600 hover:text-emerald-700 font-light transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <div className="relative">
-              <motion.input
-                whileFocus={{ scale: 1.02 }}
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className={`w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-light text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors ${
-                  errors.password ? "border-red-500" : ""
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-slate-500 hover:text-slate-700 text-sm"
-              >
-                {showPassword ? "👁️" : "👁️‍🗨️"}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-xs text-red-500 mt-1 font-light">
-                {errors.password}
-              </p>
-            )}
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-light text-muted-foreground">Password</Label>
+            <Input
+              type="password"
+                placeholder="********"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="h-9 text-xs font-light rounded-lg border-border bg-background placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-foreground/20"
+            />
           </div>
 
-          {/* Submit Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full mt-6 px-4 py-3 bg-emerald-500 text-white rounded-lg text-sm font-light hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+            className="w-full h-9 rounded-lg text-xs font-normal mt-2"
           >
-            {isLoading ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                />
-                Signing In...
-              </>
-            ) : (
-              "Sign In"
-            )}
-          </motion.button>
-        </motion.form>
+            {isSubmitting ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
 
-        {/* Signup Link */}
-        <motion.p
-          variants={itemVariants}
-          className="text-center mt-6 text-sm text-slate-600 font-light"
-        >
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/auth/signup"
-            className="text-emerald-600 hover:text-emerald-700 font-normal transition-colors"
-          >
-            Sign Up
+        <p className="text-[11px] text-muted-foreground font-light text-center mt-6">
+          Don't have an account?{" "}
+          <Link href="/auth/signup" className="text-foreground hover:underline">
+            Sign up
           </Link>
-        </motion.p>
+        </p>
       </motion.div>
-    </main>
+    </div>
   );
 }
