@@ -4,540 +4,570 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  RefreshCw, Plus, Trash2, Globe, Activity,
+  TrendingUp, AlertCircle, CheckCircle2, XCircle,
+  LogOut, ChevronDown, ChevronUp, Clock, Server,
+  LayoutDashboard, Radio, X,
+} from "lucide-react";
 
 import { ModeToggle } from "@/components/themetoggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 
-type WebsiteStatus = "up" | "down" | "unknow";
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface WebsiteTick {
+type WStatus = "up" | "down" | "unknow";
+
+interface Tick {
   id: number;
   Response_time_ms: number;
-  Status: WebsiteStatus;
+  Status: WStatus;
   region_id: number;
   website_id: number;
   createdAt: string;
   updatedAt: string;
 }
 
-interface WebsiteRecord {
+interface Site {
   id: number;
   url: string;
   createdAt: string;
   updatedAt: string;
-  ticks: WebsiteTick[];
+  ticks: Tick[];
 }
 
-interface WebsiteResponse {
-  websitedata: WebsiteRecord | null;
-}
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
-const TOKEN_STORAGE_KEY = "pulsewatch_token";
+const API = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
+const TOKEN_KEY = "pulsewatch_token";
 
-function getUserIdFromToken(token: string) {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function uid(token: string) {
   try {
-    const payload = token.split(".")[1];
-
-    if (!payload) {
-      return "unknown";
-    }
-
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = JSON.parse(window.atob(normalized));
-
-    return String(decoded.userId ?? "unknown");
-  } catch {
-    return "unknown";
-  }
+    const p = token.split(".")[1]!;
+    const d = JSON.parse(window.atob(p.replace(/-/g, "+").replace(/_/g, "/")));
+    return String(d.userId ?? "u");
+  } catch { return "u"; }
 }
 
-function getWebsiteIdsStorageKey(token: string) {
-  return `pulsewatch_website_ids_${getUserIdFromToken(token)}`;
-}
+const idsKey = (t: string) => `pulsewatch_website_ids_${uid(t)}`;
 
-function readStoredWebsiteIds(token: string) {
-  const rawIds = window.localStorage.getItem(getWebsiteIdsStorageKey(token));
-
-  if (!rawIds) {
-    return [];
-  }
-
+function readIds(t: string): number[] {
   try {
-    const parsed = JSON.parse(rawIds);
-
-    return Array.isArray(parsed)
-      ? parsed
-          .map((value) => Number(value))
-          .filter((value) => Number.isInteger(value) && value > 0)
-      : [];
-  } catch {
-    return [];
-  }
+    const raw = localStorage.getItem(idsKey(t));
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.map(Number).filter((n) => n > 0) : [];
+  } catch { return []; }
 }
 
-function writeStoredWebsiteIds(token: string, ids: number[]) {
-  window.localStorage.setItem(getWebsiteIdsStorageKey(token), JSON.stringify(ids));
+function writeIds(t: string, ids: number[]) {
+  localStorage.setItem(idsKey(t), JSON.stringify(ids));
 }
 
-function getWebsiteLabel(url: string) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
+function host(url: string) {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
 
-function formatStatusLabel(status?: WebsiteStatus) {
-  if (status === "up") return "Operational";
-  if (status === "down") return "Down";
-
-  return "Unknown";
+function sCfg(s?: WStatus) {
+  if (s === "up")    return { label: "Up",      dot: "bg-emerald-500", badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", row: "border-l-emerald-500" };
+  if (s === "down")  return { label: "Down",    dot: "bg-red-500",     badge: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",                row: "border-l-red-500" };
+  return                    { label: "Unknown", dot: "bg-amber-400",   badge: "bg-amber-400/10 text-amber-600 dark:text-amber-400 border-amber-400/20",         row: "border-l-amber-400" };
 }
 
-function formatStatusTone(status?: WebsiteStatus) {
-  if (status === "up") return "bg-[hsl(var(--success))]";
-  if (status === "down") return "bg-[hsl(var(--destructive))]";
-
-  return "bg-[hsl(var(--warning))]";
+function fmtTime(ms: number) {
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
 }
 
-function formatStatusBadge(status?: WebsiteStatus) {
-  if (status === "up") return "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]";
-  if (status === "down") return "bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))]";
-
-  return "bg-[hsl(var(--warning)/0.1)] text-[hsl(var(--warning))]";
+function fmtDate(d: string) {
+  return new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const router = useRouter();
-  const [token, setToken] = useState("");
-  const [websites, setWebsites] = useState<WebsiteRecord[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newSiteUrl, setNewSiteUrl] = useState("");
-  const [selectedSite, setSelectedSite] = useState<number | null>(null);
-  const [isBootstrapping, setIsBootstrapping] = useState(true);
-  const [isLoadingWebsites, setIsLoadingWebsites] = useState(false);
-  const [isCreatingWebsite, setIsCreatingWebsite] = useState(false);
-  const [deletingWebsiteId, setDeletingWebsiteId] = useState<number | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [token, setToken]       = useState("");
+  const [sites, setSites]       = useState<Site[]>([]);
+  const [showAdd, setShowAdd]   = useState(false);
+  const [newUrl, setNewUrl]     = useState("");
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [booting, setBooting]   = useState(true);
+  const [loading, setLoading]   = useState(false);
+  const [saving, setSaving]     = useState(false);
+  const [delId, setDelId]       = useState<number | null>(null);
+  const [err, setErr]           = useState("");
+  const [spinning, setSpinning] = useState(false);
 
-  const selected = useMemo(
-    () => websites.find((website) => website.id === selectedSite) ?? null,
-    [selectedSite, websites],
-  );
+  // Stats
+  const stats = useMemo(() => {
+    const up  = sites.filter((s) => s.ticks[0]?.Status === "up").length;
+    const dn  = sites.filter((s) => s.ticks[0]?.Status === "down").length;
+    const ms  = sites.map((s) => s.ticks[0]?.Response_time_ms).filter(Boolean) as number[];
+    const avg = ms.length ? Math.round(ms.reduce((a, b) => a + b, 0) / ms.length) : null;
+    return { total: sites.length, up, down: dn, avg };
+  }, [sites]);
 
-  async function fetchWebsiteById(websiteId: number, authToken: string) {
-    const response = await fetch(`${API_BASE_URL}/api/v2/content/website/${websiteId}`, {
-      headers: {
-        Authorization: authToken,
-      },
-      cache: "no-store",
-    });
+  // ── API helpers ─────────────────────────────────────────────────────────────
 
-    const payload = (await response.json()) as WebsiteResponse & { message?: string };
-
-    if (!response.ok) {
-      throw new Error(payload.message ?? "Failed to fetch website data.");
-    }
-
-    return payload.websitedata;
-  }
-
-  async function loadWebsites(authToken: string) {
-    setIsLoadingWebsites(true);
-    setErrorMessage("");
-
+  async function fetchOne(id: number, tok: string): Promise<Site | null> {
     try {
-      // The backend currently has no "list websites for user" endpoint, so we
-      // persist the created website ids per logged-in user and hydrate each card
-      // from the real GET /website/:websiteID response instead of rendering mocks.
-      const storedIds = readStoredWebsiteIds(authToken);
-
-      if (storedIds.length === 0) {
-        setWebsites([]);
-        return;
-      }
-
-      const websiteResults = await Promise.all(
-        storedIds.map(async (websiteId) => {
-          try {
-            return await fetchWebsiteById(websiteId, authToken);
-          } catch {
-            return null;
-          }
-        }),
-      );
-
-      const realWebsites = websiteResults.filter((website): website is WebsiteRecord => Boolean(website));
-      const realIds = realWebsites.map((website) => website.id);
-
-      writeStoredWebsiteIds(authToken, realIds);
-      setWebsites(realWebsites);
-      setSelectedSite((current) => (realIds.includes(current ?? -1) ? current : realIds[0] ?? null));
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to load monitors.");
-    } finally {
-      setIsLoadingWebsites(false);
-    }
+      const r = await fetch(`${API}/api/v2/content/website/${id}`, {
+        headers: { Authorization: tok }, cache: "no-store",
+      });
+      const d = await r.json();
+      return r.ok ? d.websitedata : null;
+    } catch { return null; }
   }
+
+  async function loadAll(tok: string, quiet = false) {
+    quiet ? setSpinning(true) : setLoading(true);
+    setErr("");
+    try {
+      const ids = readIds(tok);
+      if (!ids.length) { setSites([]); return; }
+      const res = await Promise.all(ids.map((id) => fetchOne(id, tok)));
+      const valid = res.filter((s): s is Site => Boolean(s));
+      writeIds(tok, valid.map((s) => s.id));
+      setSites(valid);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to load.");
+    } finally { setLoading(false); setSpinning(false); }
+  }
+
+  // ── Effects ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    // Dashboard access depends on the JWT issued by POST /api/v1/users/login.
-    const storedToken = window.localStorage.getItem(TOKEN_STORAGE_KEY);
-
-    if (!storedToken) {
-      router.replace("/auth/login");
-      return;
-    }
-
-    setToken(storedToken);
-    void loadWebsites(storedToken).finally(() => setIsBootstrapping(false));
+    const tok = localStorage.getItem(TOKEN_KEY);
+    if (!tok) { router.replace("/auth/login"); return; }
+    setToken(tok);
+    loadAll(tok).finally(() => setBooting(false));
   }, [router]);
 
-  async function handleAddWebsite(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  // ── Handlers ────────────────────────────────────────────────────────────────
 
-    if (!token || !newSiteUrl.trim()) {
-      return;
-    }
-
-    setIsCreatingWebsite(true);
-    setErrorMessage("");
-
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token || !newUrl.trim()) return;
+    setSaving(true); setErr("");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v2/content/website`, {
+      const r = await fetch(`${API}/api/v2/content/website`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-        body: JSON.stringify({
-          url: newSiteUrl.trim(),
-        }),
+        headers: { "Content-Type": "application/json", Authorization: token },
+        body: JSON.stringify({ url: newUrl.trim() }),
       });
-
-      const payload = (await response.json()) as { websiteID?: number; message?: string };
-
-      if (!response.ok || !payload.websiteID) {
-        throw new Error(payload.message ?? "Failed to create monitor.");
-      }
-
-      const nextIds = [payload.websiteID, ...readStoredWebsiteIds(token).filter((id) => id !== payload.websiteID)];
-      writeStoredWebsiteIds(token, nextIds);
-
-      await loadWebsites(token);
-      setNewSiteUrl("");
-      setShowAddForm(false);
-      setSelectedSite(payload.websiteID);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to create monitor.");
-    } finally {
-      setIsCreatingWebsite(false);
-    }
+      const d = await r.json();
+      if (!r.ok || !d.websiteID) throw new Error(d.message ?? "Failed.");
+      writeIds(token, [d.websiteID, ...readIds(token).filter((i) => i !== d.websiteID)]);
+      await loadAll(token);
+      setNewUrl(""); setShowAdd(false); setExpanded(d.websiteID);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to add.");
+    } finally { setSaving(false); }
   }
 
-  async function handleDeleteWebsite(websiteId: number) {
-    if (!token) {
-      return;
-    }
-
-    setDeletingWebsiteId(websiteId);
-    setErrorMessage("");
-
+  async function handleDelete(id: number) {
+    if (!token) return;
+    setDelId(id); setErr("");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v2/content/websitedelete`, {
+      const r = await fetch(`${API}/api/v2/content/websitedelete`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-        body: JSON.stringify({
-          websiteID: websiteId,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: token },
+        body: JSON.stringify({ websiteID: id }),
       });
-
-      const payload = (await response.json()) as { message?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.message ?? "Failed to delete monitor.");
-      }
-
-      const nextIds = readStoredWebsiteIds(token).filter((id) => id !== websiteId);
-      writeStoredWebsiteIds(token, nextIds);
-      setWebsites((current) => current.filter((website) => website.id !== websiteId));
-      setSelectedSite((current) => (current === websiteId ? null : current));
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to delete monitor.");
-    } finally {
-      setDeletingWebsiteId(null);
-    }
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.message ?? "Failed.");
+      writeIds(token, readIds(token).filter((i) => i !== id));
+      setSites((prev) => prev.filter((s) => s.id !== id));
+      setExpanded((cur) => (cur === id ? null : cur));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to delete.");
+    } finally { setDelId(null); }
   }
 
-  function handleSignOut() {
-    window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+  function signOut() {
+    localStorage.removeItem(TOKEN_KEY);
     router.replace("/auth/login");
   }
 
-  if (isBootstrapping) {
+  // ── Loading screen ───────────────────────────────────────────────────────────
+
+  if (booting) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        <p className="text-xs font-light text-muted-foreground">Loading your monitors...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-xs text-muted-foreground">Loading…</p>
+        </div>
       </div>
     );
   }
 
+  // ── Render ───────────────────────────────────────────────────────────────────
+
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-6">
-          <Link href="/" className="text-xs font-medium tracking-tight">
-            BetterUptime
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-light text-muted-foreground">Dashboard</span>
-            <ModeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[11px] font-light"
-              onClick={handleSignOut}
-            >
-              Sign out
-            </Button>
-          </div>
-        </div>
-      </nav>
+    <div className="flex min-h-screen bg-background">
 
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        <div className="mb-8 flex items-center justify-between gap-4">
+      {/* ── SIDEBAR ─────────────────────────────────────────────────────────── */}
+      <aside className="hidden lg:flex w-56 flex-col border-r border-border bg-card shrink-0">
+        {/* Brand */}
+        <div className="flex h-14 items-center gap-2.5 px-5 border-b border-border">
+          <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
+            <Activity className="h-3.5 w-3.5 text-primary-foreground" />
+          </div>
+          <Link href="/" className="text-sm font-semibold tracking-tight">BetterUptime</Link>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2 mb-2">Menu</p>
+          {[
+            { icon: LayoutDashboard, label: "Dashboard", active: true },
+            { icon: Radio, label: "Monitors", active: false },
+            { icon: Globe, label: "Websites", active: false },
+          ].map(({ icon: Icon, label, active }) => (
+            <button
+              type="button"
+              key={label}
+              className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm cursor-pointer transition-colors ${
+                active
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Sidebar footer */}
+        <div className="px-3 py-3 border-t border-border space-y-1">
+          <button
+            type="button"
+            onClick={signOut}
+            className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* ── MAIN CONTENT ────────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* Top bar */}
+        <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/80 backdrop-blur-md flex items-center justify-between px-6">
           <div>
-            <h1 className="text-lg font-extralight tracking-tight">Monitors</h1>
-            <p className="mt-0.5 text-[11px] font-light text-muted-foreground">
-              {websites.length} monitor{websites.length !== 1 ? "s" : ""} loaded from your backend
+            <h1 className="text-sm font-semibold">Dashboard</h1>
+            <p className="text-[11px] text-muted-foreground leading-tight hidden sm:block">
+              Monitor uptime · {stats.total} site{stats.total !== 1 ? "s" : ""} tracked
             </p>
           </div>
-          <Button
-            size="sm"
-            className="h-8 rounded-lg px-4 text-[11px] font-normal"
-            onClick={() => setShowAddForm((current) => !current)}
-          >
-            {showAddForm ? "Close form" : "+ Add website"}
-          </Button>
-        </div>
-
-        {errorMessage ? (
-          <div className="mb-6 rounded-xl border border-[hsl(var(--destructive)/0.3)] bg-[hsl(var(--destructive)/0.06)] px-4 py-3 text-[11px] font-light text-[hsl(var(--destructive))]">
-            {errorMessage}
-          </div>
-        ) : null}
-
-        <AnimatePresence initial={false}>
-          {showAddForm ? (
-            <motion.div
-              className="mb-6 rounded-xl border border-border bg-card p-5"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs hidden sm:flex"
+              onClick={() => loadAll(token, true)}
+              disabled={spinning}
+              id="refresh-btn"
             >
-              <form onSubmit={handleAddWebsite} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-light text-muted-foreground">
-                    Website URL
-                  </Label>
-                  <Input
-                    placeholder="https://example.com"
-                    value={newSiteUrl}
-                    onChange={(event) => setNewSiteUrl(event.target.value)}
-                    className="h-9 rounded-lg border-border bg-background text-xs font-light placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-foreground/20"
-                  />
-                </div>
-                <p className="text-[10px] font-light text-muted-foreground">
-                  This form posts directly to your existing `POST /api/v2/content/website` endpoint,
-                  which accepts only a `url`.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-[11px] font-light"
-                    onClick={() => setShowAddForm(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="h-8 rounded-lg px-4 text-[11px] font-normal"
-                    disabled={isCreatingWebsite}
-                  >
-                    {isCreatingWebsite ? "Adding..." : "Add monitor"}
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-
-        {isLoadingWebsites ? (
-          <div className="rounded-xl border border-border px-6 py-10 text-center">
-            <p className="text-xs font-light text-muted-foreground">Refreshing monitor data...</p>
-          </div>
-        ) : websites.length === 0 ? (
-          <motion.div
-            className="rounded-xl border border-dashed border-border p-12 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <p className="mb-3 text-xs font-light text-muted-foreground">
-              No monitors are indexed in this dashboard yet.
-            </p>
-            <p className="mb-5 text-[11px] font-light text-muted-foreground">
-              Because your backend does not expose a list endpoint, this page remembers each created
-              monitor id for the logged-in user and then reloads every card from the backend.
-            </p>
+              <RefreshCw className={`h-3.5 w-3.5 ${spinning ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
             <Button
               size="sm"
-              variant="outline"
-              className="h-8 rounded-lg px-4 text-[11px] font-normal"
-              onClick={() => setShowAddForm(true)}
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setShowAdd((v) => !v)}
+              id="add-monitor-btn"
             >
-              Add your first website
+              {showAdd ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+              {showAdd ? "Cancel" : "Add monitor"}
             </Button>
-          </motion.div>
-        ) : (
-          <div className="space-y-2">
-            {websites.map((site, index) => {
-              const latestTick = site.ticks[0];
+            <ModeToggle />
+          </div>
+        </header>
 
-              return (
-                <motion.div
-                  key={site.id}
-                  className={`rounded-xl border p-4 transition-all duration-200 ${
-                    selectedSite === site.id
-                      ? "border-foreground/20 bg-card shadow-sm"
-                      : "border-border bg-background hover:border-foreground/10 hover:bg-card/50"
-                  }`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.04 }}
-                >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <button
-                      type="button"
-                      className="flex flex-1 items-start gap-3 text-left"
-                      onClick={() => setSelectedSite((current) => (current === site.id ? null : site.id))}
-                    >
-                      <div className={`mt-1.5 h-2 w-2 rounded-full ${formatStatusTone(latestTick?.Status)}`} />
-                      <div>
-                        <p className="text-xs font-medium">{getWebsiteLabel(site.url)}</p>
-                        <p className="text-[10px] font-light text-muted-foreground">{site.url}</p>
-                        <p className="mt-1 text-[10px] font-light text-muted-foreground">
-                          Added {new Date(site.createdAt).toLocaleString()}
-                        </p>
+        <main className="flex-1 p-6 space-y-5">
+
+          {/* Error */}
+          {err && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-xs text-destructive flex items-center gap-2">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {err}
+            </div>
+          )}
+
+          {/* Add form */}
+          <AnimatePresence>
+            {showAdd && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.18 }}
+                className="overflow-hidden"
+              >
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="pt-4 pb-4">
+                    <p className="text-xs font-semibold mb-3">Add a new monitor</p>
+                    <form onSubmit={handleAdd} className="flex items-end gap-3">
+                      <div className="flex-1 space-y-1.5">
+                        <Label className="text-[11px] text-muted-foreground">Website URL</Label>
+                        <Input
+                          id="new-url-input"
+                          placeholder="https://example.com"
+                          value={newUrl}
+                          onChange={(e) => setNewUrl(e.target.value)}
+                          className="h-8 text-xs"
+                          required
+                        />
                       </div>
-                    </button>
-
-                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-light ${formatStatusBadge(latestTick?.Status)}`}
-                      >
-                        {formatStatusLabel(latestTick?.Status)}
-                      </span>
-                      <span className="text-[10px] font-light text-muted-foreground">
-                        {latestTick
-                          ? `${latestTick.Response_time_ms}ms - last checked ${new Date(latestTick.createdAt).toLocaleString()}`
-                          : "No checks written yet"}
-                      </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-7 rounded-lg px-3 text-[10px] font-normal"
-                        onClick={() => handleDeleteWebsite(site.id)}
-                        disabled={deletingWebsiteId === site.id}
-                      >
-                        {deletingWebsiteId === site.id ? "Deleting..." : "Delete"}
+                      <Button id="submit-monitor-btn" type="submit" size="sm" className="h-8 text-xs" disabled={saving}>
+                        {saving ? "Adding…" : "Add"}
                       </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── STAT CARDS ──────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            {[
+              { label: "Total",       value: stats.total,                          sub: "monitors tracked",    Icon: Globe,         color: "text-blue-500",    bg: "bg-blue-500/10"    },
+              { label: "Operational", value: stats.up,                             sub: "sites responding",    Icon: CheckCircle2,  color: "text-emerald-500", bg: "bg-emerald-500/10" },
+              { label: "Down",        value: stats.down,                           sub: "sites failing",       Icon: XCircle,       color: "text-red-500",     bg: "bg-red-500/10"     },
+              { label: "Avg Response",value: stats.avg !== null ? `${stats.avg}ms` : "—", sub: "average latency", Icon: TrendingUp, color: "text-violet-500",  bg: "bg-violet-500/10"  },
+            ].map(({ label, value, sub, Icon, color, bg }) => (
+              <Card key={label} className="border-border">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <p className="text-xs text-muted-foreground font-medium">{label}</p>
+                    <div className={`h-7 w-7 rounded-lg ${bg} flex items-center justify-center`}>
+                      <Icon className={`h-3.5 w-3.5 ${color}`} />
                     </div>
                   </div>
-
-                  <AnimatePresence initial={false}>
-                    {selectedSite === site.id ? (
-                      <motion.div
-                        className="mt-4 border-t border-border pt-4"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {/* The backend GET response currently exposes the website row plus only the
-                            latest tick, so this detail panel intentionally renders exactly that
-                            contract instead of inventing historical logs or uptime percentages. */}
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                          <div className="rounded-lg border border-border bg-background/70 p-3">
-                            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                              Monitor ID
-                            </p>
-                            <p className="mt-2 text-xs font-medium">{site.id}</p>
-                          </div>
-                          <div className="rounded-lg border border-border bg-background/70 p-3">
-                            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                              Current status
-                            </p>
-                            <p className="mt-2 text-xs font-medium">{formatStatusLabel(latestTick?.Status)}</p>
-                          </div>
-                          <div className="rounded-lg border border-border bg-background/70 p-3">
-                            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                              Response time
-                            </p>
-                            <p className="mt-2 text-xs font-medium">
-                              {latestTick ? `${latestTick.Response_time_ms}ms` : "No data yet"}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-border bg-background/70 p-3">
-                            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                              Region ID
-                            </p>
-                            <p className="mt-2 text-xs font-medium">
-                              {latestTick ? latestTick.region_id : "Not available"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 rounded-lg border border-border bg-muted/20 p-3">
-                          <p className="text-[11px] font-medium">Latest backend tick</p>
-                          <div className="mt-3 grid gap-2 text-[11px] font-light text-muted-foreground sm:grid-cols-2">
-                            <p>Website created: {new Date(site.createdAt).toLocaleString()}</p>
-                            <p>Website updated: {new Date(site.updatedAt).toLocaleString()}</p>
-                            <p>
-                              Last tick created:{" "}
-                              {latestTick ? new Date(latestTick.createdAt).toLocaleString() : "No tick yet"}
-                            </p>
-                            <p>
-                              Last tick updated:{" "}
-                              {latestTick ? new Date(latestTick.updatedAt).toLocaleString() : "No tick yet"}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
+                  <p className="text-2xl font-bold tracking-tight">{value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        )}
 
-        {selected ? (
-          <p className="mt-4 text-[10px] font-light text-muted-foreground">
-            Selected monitor: {selected.id}
-          </p>
-        ) : null}
+          {/* ── MONITOR TABLE ───────────────────────────────────────────────── */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            {/* Table header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Server className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-semibold">Monitors</p>
+                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {sites.length}
+                </span>
+              </div>
+            </div>
+
+            {/* Column labels */}
+            {sites.length > 0 && (
+              <div className="grid grid-cols-12 items-center px-5 py-2 border-b border-border bg-muted/40 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <div className="col-span-1" />
+                <div className="col-span-4">Website</div>
+                <div className="col-span-2 hidden sm:block">Status</div>
+                <div className="col-span-2 hidden md:block">Response</div>
+                <div className="col-span-2 hidden lg:block">Last Check</div>
+                <div className="col-span-1 text-right">Actions</div>
+              </div>
+            )}
+
+            {/* Rows */}
+            {loading ? (
+              <div className="divide-y divide-border">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="grid grid-cols-12 items-center gap-3 px-5 py-4">
+                    <div className="col-span-1"><Skeleton className="h-2 w-2 rounded-full" /></div>
+                    <div className="col-span-4 space-y-1.5">
+                      <Skeleton className="h-3 w-28" /><Skeleton className="h-2.5 w-44" />
+                    </div>
+                    <div className="col-span-2 hidden sm:block"><Skeleton className="h-5 w-16 rounded-full" /></div>
+                    <div className="col-span-2 hidden md:block"><Skeleton className="h-3 w-12" /></div>
+                    <div className="col-span-2 hidden lg:block"><Skeleton className="h-3 w-24" /></div>
+                    <div className="col-span-1" />
+                  </div>
+                ))}
+              </div>
+            ) : sites.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                  <Server className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-semibold mb-1">No monitors yet</p>
+                <p className="text-xs text-muted-foreground mb-5 max-w-xs">
+                  Add a website to start tracking its uptime and response time.
+                </p>
+                <Button id="empty-add-btn" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setShowAdd(true)}>
+                  <Plus className="h-3.5 w-3.5" /> Add your first monitor
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {sites.map((site, i) => {
+                  const tick = site.ticks[0];
+                  const cfg  = sCfg(tick?.Status);
+                  const open = expanded === site.id;
+
+                  return (
+                    <motion.div
+                      key={site.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className={`border-l-2 ${cfg.row} transition-colors`}
+                    >
+                      {/* ─ Row (div, not button — fixes nested button bug) ─ */}
+                      <div
+                        className="grid grid-cols-12 items-center gap-2 px-5 py-3.5 cursor-pointer hover:bg-muted/40 transition-colors select-none"
+                        onClick={() => setExpanded(open ? null : site.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === "Enter" && setExpanded(open ? null : site.id)}
+                        aria-expanded={open}
+                      >
+                        {/* Status dot */}
+                        <div className="col-span-1 flex items-center">
+                          <span className={`h-2 w-2 rounded-full ${cfg.dot} ${tick?.Status === "up" ? "animate-pulse" : ""}`} />
+                        </div>
+
+                        {/* URL */}
+                        <div className="col-span-4 min-w-0">
+                          <p className="text-xs font-semibold truncate">{host(site.url)}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{site.url}</p>
+                        </div>
+
+                        {/* Status badge */}
+                        <div className="col-span-2 hidden sm:block">
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${cfg.badge}`}>
+                            {cfg.label}
+                          </span>
+                        </div>
+
+                        {/* Response */}
+                        <div className="col-span-2 hidden md:flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          {tick ? fmtTime(tick.Response_time_ms) : "—"}
+                        </div>
+
+                        {/* Last check */}
+                        <div className="col-span-2 hidden lg:block text-[11px] text-muted-foreground">
+                          {tick ? fmtDate(tick.createdAt) : "No data"}
+                        </div>
+
+                        {/* Actions — stop propagation so row click doesn't fire */}
+                        <div className="col-span-1 flex items-center justify-end gap-1.5">
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            id={`delete-${site.id}`}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(site.id); }}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); handleDelete(site.id); } }}
+                            className={`flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer ${delId === site.id ? "opacity-50 pointer-events-none" : ""}`}
+                            aria-label="Delete monitor"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="text-muted-foreground">
+                            {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ─ Expanded detail ─────────────────────────────────── */}
+                      <AnimatePresence>
+                        {open && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-5 pb-5 pt-1 bg-muted/20">
+                              <Separator className="mb-4" />
+
+                              {/* Tick history label */}
+                              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                                Monitor Details
+                              </p>
+
+                              {/* Stat cells */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                                {[
+                                  { label: "Monitor ID",     value: `#${site.id}` },
+                                  { label: "Current Status", value: cfg.label },
+                                  { label: "Response Time",  value: tick ? fmtTime(tick.Response_time_ms) : "No data" },
+                                  { label: "Region",         value: tick ? `Region ${tick.region_id}` : "—" },
+                                ].map(({ label, value }) => (
+                                  <div key={label} className="rounded-lg border border-border bg-card px-3 py-2.5">
+                                    <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
+                                    <p className="text-xs font-bold">{value}</p>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Up / Down visual bar from ticks */}
+                              {site.ticks.length > 0 && (
+                                <div className="mb-4">
+                                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                                    Last {site.ticks.length} Check{site.ticks.length > 1 ? "s" : ""}
+                                  </p>
+                                  <div className="flex items-center gap-1">
+                                    {site.ticks.slice(0, 30).map((t) => (
+                                      <div
+                                        key={t.id}
+                                        title={`${t.Status} · ${t.Response_time_ms}ms · ${fmtDate(t.createdAt)}`}
+                                        className={`h-6 flex-1 rounded-sm ${
+                                          t.Status === "up" ? "bg-emerald-500" :
+                                          t.Status === "down" ? "bg-red-500" : "bg-amber-400"
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <div className="flex items-center justify-between mt-1 text-[10px] text-muted-foreground">
+                                    <span>Older</span><span>Latest</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Timestamps */}
+                              <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-[11px] text-muted-foreground">
+                                <p>Added: <span className="text-foreground font-medium">{fmtDate(site.createdAt)}</span></p>
+                                <p>Updated: <span className="text-foreground font-medium">{fmtDate(site.updatedAt)}</span></p>
+                                {tick && (
+                                  <>
+                                    <p>Last tick: <span className="text-foreground font-medium">{fmtDate(tick.createdAt)}</span></p>
+                                    <p>Tick ID: <span className="text-foreground font-medium">#{tick.id}</span></p>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
