@@ -15,10 +15,12 @@ import { ModeToggle } from "@/components/themetoggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,11 +51,13 @@ const TOKEN_KEY = "pulsewatch_token";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function uid(token: string) {
+function uid(tok: string) {
   try {
-    const p = token.split(".")[1]!;
-    const d = JSON.parse(window.atob(p.replace(/-/g, "+").replace(/_/g, "/")));
-    return String(d.userId ?? "u");
+    const payload = tok.split(".")[1];
+    if (!payload) return "u";
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const p = JSON.parse(window.atob(normalized));
+    return String(p.userId ?? "u");
   } catch { return "u"; }
 }
 
@@ -61,10 +65,41 @@ const idsKey = (t: string) => `pulsewatch_website_ids_${uid(t)}`;
 
 function readIds(t: string): number[] {
   try {
-    const raw = localStorage.getItem(idsKey(t));
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr.map(Number).filter((n) => n > 0) : [];
+    const nextKey = idsKey(t);
+    const rawNext = localStorage.getItem(nextKey);
+    let ids: number[] = [];
+    
+    if (rawNext) {
+      const arr = JSON.parse(rawNext);
+      if (Array.isArray(arr)) ids = arr.map(Number).filter((n) => n > 0);
+    }
+    
+    // Legacy support for older dashboard versions
+    const legacyKey1 = "pulsewatch_dashboard_site_refs";
+    const rawLegacy1 = localStorage.getItem(legacyKey1);
+    if (rawLegacy1) {
+      const arr = JSON.parse(rawLegacy1);
+      if (Array.isArray(arr)) {
+        arr.forEach(item => {
+          if (item && typeof item === 'object' && typeof item.id === 'number') {
+            if (!ids.includes(item.id)) ids.push(item.id);
+          }
+        });
+      }
+    }
+
+    const legacyKey2 = `pulsewatch_website_ids_u`; // Some fallback keys
+    const rawLegacy2 = localStorage.getItem(legacyKey2);
+    if (rawLegacy2) {
+      const arr = JSON.parse(rawLegacy2);
+      if (Array.isArray(arr)) {
+        arr.map(Number).filter((n) => n > 0).forEach(id => {
+          if (!ids.includes(id)) ids.push(id);
+        });
+      }
+    }
+
+    return ids;
   } catch { return []; }
 }
 
@@ -77,9 +112,9 @@ function host(url: string) {
 }
 
 function sCfg(s?: WStatus) {
-  if (s === "up")    return { label: "Up",      dot: "bg-emerald-500", badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", row: "border-l-emerald-500" };
-  if (s === "down")  return { label: "Down",    dot: "bg-red-500",     badge: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",                row: "border-l-red-500" };
-  return                    { label: "Unknown", dot: "bg-amber-400",   badge: "bg-amber-400/10 text-amber-600 dark:text-amber-400 border-amber-400/20",         row: "border-l-amber-400" };
+  if (s === "up")   return { label: "Up",      dot: "bg-foreground",          badge: "bg-foreground/5 text-foreground border-foreground/20",     row: "border-l-foreground" };
+  if (s === "down") return { label: "Down",    dot: "bg-destructive",         badge: "bg-destructive/10 text-destructive border-destructive/20", row: "border-l-destructive" };
+  return                   { label: "Unknown", dot: "bg-muted-foreground",    badge: "bg-muted text-muted-foreground border-border",              row: "border-l-muted-foreground" };
 }
 
 function fmtTime(ms: number) {
@@ -97,7 +132,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [token, setToken]       = useState("");
   const [sites, setSites]       = useState<Site[]>([]);
-  const [showAdd, setShowAdd]   = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [newUrl, setNewUrl]     = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
   const [booting, setBooting]   = useState(true);
@@ -128,11 +163,30 @@ export default function Dashboard() {
     } catch { return null; }
   }
 
+  async function discoverSites(tok: string): Promise<number[]> {
+    // Probe IDs 1..200 in batches of 20 to find which belong to this user.
+    // The backend's getwebsite endpoint filters by User_ID, so foreign IDs return null.
+    const PROBE_MAX = 200;
+    const BATCH = 20;
+    const found: number[] = [];
+    for (let start = 1; start <= PROBE_MAX; start += BATCH) {
+      const batch = Array.from({ length: BATCH }, (_, i) => start + i);
+      const results = await Promise.all(batch.map((id) => fetchOne(id, tok)));
+      results.forEach((s) => { if (s) found.push(s.id); });
+    }
+    return found;
+  }
+
   async function loadAll(tok: string, quiet = false) {
     quiet ? setSpinning(true) : setLoading(true);
     setErr("");
     try {
-      const ids = readIds(tok);
+      let ids = readIds(tok);
+      if (!ids.length) {
+        // No cached IDs — discover from backend
+        ids = await discoverSites(tok);
+        if (ids.length) writeIds(tok, ids);
+      }
       if (!ids.length) { setSites([]); return; }
       const res = await Promise.all(ids.map((id) => fetchOne(id, tok)));
       const valid = res.filter((s): s is Site => Boolean(s));
@@ -168,7 +222,7 @@ export default function Dashboard() {
       if (!r.ok || !d.websiteID) throw new Error(d.message ?? "Failed.");
       writeIds(token, [d.websiteID, ...readIds(token).filter((i) => i !== d.websiteID)]);
       await loadAll(token);
-      setNewUrl(""); setShowAdd(false); setExpanded(d.websiteID);
+      setNewUrl(""); setDialogOpen(false); setExpanded(d.websiteID);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to add.");
     } finally { setSaving(false); }
@@ -223,29 +277,23 @@ export default function Dashboard() {
           <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
             <Activity className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
-          <Link href="/" className="text-sm font-semibold tracking-tight">BetterUptime</Link>
+          <Link href="/" className="text-sm font-semibold tracking-tight">Pulsewatch</Link>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-2 mb-2">Menu</p>
           {[
-            { icon: LayoutDashboard, label: "Dashboard", active: true },
-            { icon: Radio, label: "Monitors", active: false },
-            { icon: Globe, label: "Websites", active: false },
-          ].map(({ icon: Icon, label, active }) => (
-            <button
-              type="button"
+            { icon: LayoutDashboard, label: "Dashboard" }
+          ].map(({ icon: Icon, label }) => (
+            <Link
               key={label}
-              className={`w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm cursor-pointer transition-colors ${
-                active
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
+              href="/dashboard"
+              className="w-full flex items-center gap-2.5 rounded-lg bg-foreground/10 px-2.5 py-2 text-sm text-foreground font-medium transition-colors"
             >
               <Icon className="h-4 w-4" />
               {label}
-            </button>
+            </Link>
           ))}
         </nav>
 
@@ -269,9 +317,7 @@ export default function Dashboard() {
         <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/80 backdrop-blur-md flex items-center justify-between px-6">
           <div>
             <h1 className="text-sm font-semibold">Dashboard</h1>
-            <p className="text-[11px] text-muted-foreground leading-tight hidden sm:block">
-              Monitor uptime · {stats.total} site{stats.total !== 1 ? "s" : ""} tracked
-            </p>
+            
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -288,11 +334,11 @@ export default function Dashboard() {
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
-              onClick={() => setShowAdd((v) => !v)}
+              onClick={() => setDialogOpen(true)}
               id="add-monitor-btn"
             >
-              {showAdd ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-              {showAdd ? "Cancel" : "Add monitor"}
+              <Plus className="h-3.5 w-3.5" />
+              Add monitor
             </Button>
             <ModeToggle />
           </div>
@@ -307,53 +353,60 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Add form */}
-          <AnimatePresence>
-            {showAdd && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.18 }}
-                className="overflow-hidden"
-              >
-                <Card className="border-primary/30 bg-primary/5">
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs font-semibold mb-3">Add a new monitor</p>
-                    <form onSubmit={handleAdd} className="flex items-end gap-3">
-                      <div className="flex-1 space-y-1.5">
-                        <Label className="text-[11px] text-muted-foreground">Website URL</Label>
-                        <Input
-                          id="new-url-input"
-                          placeholder="https://example.com"
-                          value={newUrl}
-                          onChange={(e) => setNewUrl(e.target.value)}
-                          className="h-8 text-xs"
-                          required
-                        />
-                      </div>
-                      <Button id="submit-monitor-btn" type="submit" size="sm" className="h-8 text-xs" disabled={saving}>
-                        {saving ? "Adding…" : "Add"}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Add monitor dialog */}
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setNewUrl(""); }}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-sm font-semibold">Add a monitor</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Enter the full URL you want to monitor. We'll start checking it immediately.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAdd} className="space-y-4 pt-1">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Website URL</Label>
+                  <Input
+                    id="new-url-input"
+                    placeholder="https://example.com"
+                    value={newUrl}
+                    onChange={(e) => setNewUrl(e.target.value)}
+                    className="h-9 text-sm"
+                    autoFocus
+                    required
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => { setDialogOpen(false); setNewUrl(""); }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button id="submit-monitor-btn" type="submit" size="sm" className="h-8 text-xs" disabled={saving}>
+                    {saving ? "Adding…" : "Add monitor"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
 
           {/* ── STAT CARDS ──────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             {[
-              { label: "Total",       value: stats.total,                          sub: "monitors tracked",    Icon: Globe,         color: "text-blue-500",    bg: "bg-blue-500/10"    },
-              { label: "Operational", value: stats.up,                             sub: "sites responding",    Icon: CheckCircle2,  color: "text-emerald-500", bg: "bg-emerald-500/10" },
-              { label: "Down",        value: stats.down,                           sub: "sites failing",       Icon: XCircle,       color: "text-red-500",     bg: "bg-red-500/10"     },
-              { label: "Avg Response",value: stats.avg !== null ? `${stats.avg}ms` : "—", sub: "average latency", Icon: TrendingUp, color: "text-violet-500",  bg: "bg-violet-500/10"  },
-            ].map(({ label, value, sub, Icon, color, bg }) => (
+              { label: "Total",        value: stats.total,                               sub: "monitors tracked", Icon: Globe        },
+              { label: "Operational",  value: stats.up,                                  sub: "sites up",         Icon: CheckCircle2 },
+              { label: "Down",         value: stats.down,                                sub: "sites down",       Icon: XCircle      },
+              { label: "Avg Response", value: stats.avg !== null ? `${stats.avg}ms` : "—", sub: "avg latency",   Icon: TrendingUp   },
+            ].map(({ label, value, sub, Icon }) => (
               <Card key={label} className="border-border">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <p className="text-xs text-muted-foreground font-medium">{label}</p>
-                    <div className={`h-7 w-7 rounded-lg ${bg} flex items-center justify-center`}>
-                      <Icon className={`h-3.5 w-3.5 ${color}`} />
+                    <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                   </div>
                   <p className="text-2xl font-bold tracking-tight">{value}</p>
@@ -413,7 +466,7 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mb-5 max-w-xs">
                   Add a website to start tracking its uptime and response time.
                 </p>
-                <Button id="empty-add-btn" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setShowAdd(true)}>
+                <Button id="empty-add-btn" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setDialogOpen(true)}>
                   <Plus className="h-3.5 w-3.5" /> Add your first monitor
                 </Button>
               </div>
@@ -443,7 +496,7 @@ export default function Dashboard() {
                       >
                         {/* Status dot */}
                         <div className="col-span-1 flex items-center">
-                          <span className={`h-2 w-2 rounded-full ${cfg.dot} ${tick?.Status === "up" ? "animate-pulse" : ""}`} />
+                          <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
                         </div>
 
                         {/* URL */}
@@ -534,8 +587,8 @@ export default function Dashboard() {
                                         key={t.id}
                                         title={`${t.Status} · ${t.Response_time_ms}ms · ${fmtDate(t.createdAt)}`}
                                         className={`h-6 flex-1 rounded-sm ${
-                                          t.Status === "up" ? "bg-emerald-500" :
-                                          t.Status === "down" ? "bg-red-500" : "bg-amber-400"
+                                          t.Status === "up" ? "bg-foreground" :
+                                          t.Status === "down" ? "bg-destructive" : "bg-muted-foreground"
                                         }`}
                                       />
                                     ))}

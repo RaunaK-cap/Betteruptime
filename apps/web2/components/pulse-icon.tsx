@@ -37,16 +37,23 @@ export function AnimatedPulseRings() {
     <div className="relative w-12 h-12 flex items-center justify-center">
       {/* Center dot */}
       <motion.div
-        className="absolute w-2 h-2 bg-emerald-500 rounded-full"
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 0.6, repeat: Infinity }}
+        className="absolute w-2 h-2 bg-foreground rounded-full"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [1, 0.8, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
       />
 
       {/* Rings */}
       {[1, 2, 3].map((ring) => (
         <motion.div
           key={ring}
-          className="absolute border-2 border-emerald-500 rounded-full"
+          className="absolute border-2 border-foreground rounded-full"
           style={{
             width: 12 + ring * 12,
             height: 12 + ring * 12,
