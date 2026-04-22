@@ -62,16 +62,16 @@ export default function Signup() {
       </div>
 
       {/* ── Top Bar ── */}
-      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-6 z-20">
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 z-20">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="h-8 w-8 rounded-lg bg-foreground flex items-center justify-center group-hover:scale-105 transition-transform">
-            <Activity className="h-4 w-4 text-background" />
+          <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-foreground flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+            <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-background" />
           </div>
-          <span className="text-sm font-bold tracking-tight">pulsewatch</span>
+          <span className="hidden sm:inline-block text-sm font-bold tracking-tight">pulsewatch</span>
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4">
           <span className="text-xs text-muted-foreground hidden sm:block">Have an account?</span>
-          <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+          <Button variant="outline" size="sm" className="h-8 text-[11px] sm:text-xs px-2.5 sm:px-3" asChild>
             <Link href="/auth/login">Sign in</Link>
           </Button>
           <ModeToggle />

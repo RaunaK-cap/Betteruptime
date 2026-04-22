@@ -1,6 +1,6 @@
 export const ASCII_WAVE = (() => {
   const rows = 50;
-  const cols = 140;
+  const cols = 200;
   let map = "";
   for (let y = 0; y < rows; y++) {
     let row = "";
@@ -8,7 +8,7 @@ export const ASCII_WAVE = (() => {
       const nx = (x / cols) * 8;
       const ny = (y / rows) * 6;
       // Abstract wave topography math
-      const val = Math.sin(nx * 3) * Math.cos(ny * 2) + Math.sin(nx + ny) * 0.8;
+      const val = Math.sin(nx * 3) * Math.cos(ny * 2) + Math.sin(nx + ny) * 0.9;
       
       if (val > 1.2) row += "●";
       else if (val > 0.8) row += "○";

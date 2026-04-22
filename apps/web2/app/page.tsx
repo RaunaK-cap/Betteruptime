@@ -122,12 +122,12 @@ export default function Landing() {
 
       {/* ── NAVBAR ── */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-foreground flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-foreground flex items-center justify-center shrink-0">
               <Activity className="h-3.5 w-3.5 text-background" />
             </div>
-            <span className="text-sm font-semibold tracking-tight">pulsewatch</span>
+            <span className="hidden sm:inline-block text-sm font-semibold tracking-tight">pulsewatch</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
@@ -143,13 +143,13 @@ export default function Landing() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <ModeToggle />
-            <Button variant="ghost" size="sm" className="h-8 text-xs" asChild>
+            <Button variant="ghost" size="sm" className="h-8 text-[11px] sm:text-xs px-2 sm:px-3" asChild>
               <Link href="/auth/login">Sign in</Link>
             </Button>
-            <Button size="sm" className="h-8 text-xs gap-1" asChild>
-              <Link href="/auth/signup">Get started <ChevronRight className="h-3.5 w-3.5" /></Link>
+            <Button size="sm" className="h-8 text-[11px] sm:text-xs px-2.5 sm:px-3 gap-1" asChild>
+              <Link href="/auth/signup">Get started <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></Link>
             </Button>
           </div>
         </div>
@@ -182,16 +182,16 @@ export default function Landing() {
               <span className="text-muted-foreground">something breaks.</span>
             </h1>
 
-            <p className="text-sm sm:text-base text-muted-foreground font-light max-w-2xl mx-auto mb-10 leading-relaxed">
+            <p className="text-xs sm:text-xs text-muted-foreground font-light max-w-2xl mx-auto mb-10 leading-relanxed">
               pulsewatch monitors your websites from multiple regions, tracks response times,
-              and stores every result in real-time using a Redis stream pipeline and PostgreSQL.
+              and stores every result in real-time.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button size="lg" className="h-11 px-8 text-sm gap-2 w-full sm:w-auto" asChild>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button size="lg" className="h-10 sm:h-11 px-6 sm:px-8 text-sm gap-2 w-auto" asChild>
                 <Link href="/auth/signup">Start monitoring free <ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <Button variant="outline" size="lg" className="h-11 px-8 text-sm w-full sm:w-auto" asChild>
+              <Button variant="outline" size="lg" className="h-10 sm:h-11 px-6 sm:px-8 text-sm w-auto" asChild>
                 <Link href="/dashboard">View dashboard</Link>
               </Button>
             </div>
@@ -237,10 +237,10 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[22rem]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 auto-rows-[16rem] sm:auto-rows-[22rem]">
             {/* 1. Global Monitoring (Span 2) */}
             <motion.div
-              className="md:col-span-2 rounded-2xl border border-border bg-card p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
+              className="md:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -267,7 +267,7 @@ export default function Landing() {
 
             {/* 2. Response Time (Span 1) */}
             <motion.div
-              className="rounded-2xl border border-border bg-card p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
+              className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -294,7 +294,7 @@ export default function Landing() {
 
             {/* 3. Fast Detection (Span 1) */}
             <motion.div
-              className="rounded-2xl border border-border bg-card p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
+              className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -321,7 +321,7 @@ export default function Landing() {
 
             {/* 4. Simple Dashboard (Span 2) */}
             <motion.div
-              className="md:col-span-2 rounded-2xl border border-border bg-card p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
+              className="md:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -353,7 +353,7 @@ export default function Landing() {
 
             {/* 5. Historical Trends (Span 2) */}
             <motion.div
-              className="md:col-span-2 rounded-2xl border border-border bg-card p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
+              className="md:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -391,7 +391,7 @@ export default function Landing() {
 
             {/* 6. Reliable Pipeline (Span 1) */}
             <motion.div
-              className="rounded-2xl border border-border bg-card p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
+              className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col relative overflow-hidden group hover:border-foreground/30 transition-colors"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -588,7 +588,7 @@ export default function Landing() {
             </div>
             <span className="text-xs font-semibold">pulsewatch</span>
           </div>
-          <p className="text-[11px] text-muted-foreground">Built with Next.js · Redis Streams · PostgreSQL · Express</p>
+          
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
             <Link href="/auth/login" className="hover:text-foreground transition-colors">Login</Link>
             <Link href="/auth/signup" className="hover:text-foreground transition-colors">Sign up</Link>
