@@ -1,11 +1,119 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Activity, ArrowRight, CheckCircle2, Globe, Clock, TrendingUp, Shield, Zap, ChevronRight, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/themetoggler";
 
+const ASCII_WAVE = (() => {
+  const rows = 60;
+  const cols = 300;
+  let map = "";
+  for (let y = 0; y < rows; y++) {
+    let row = "";
+    for (let x = 0; x < cols; x++) {
+      const nx = (x / cols) * 8;
+      const ny = (y / rows) * 6;
+      // Abstract wave topography math
+      const val = Math.sin(nx * 3) * Math.cos(ny * 2) + Math.sin(nx + ny) * 0.8;
+      
+      if (val > 1.2) row += "●";
+      else if (val > 0.8) row += "○";
+      else if (val > 0.4) row += "•";
+      else if (val > 0) row += "·";
+      else if (val > -0.4) row += ".";
+      else row += " ";
+    }
+    map += row + "\n";
+  }
+  return map;
+})();
+
+const LiveMonitorCard = () => {
+  const [sites, setSites] = useState([
+    { id: 1, url: "google.com", baseMs: 142, currentMs: 142, status: "up" },
+    { id: 2, url: "github.com", baseMs: 210, currentMs: 210, status: "up" },
+    { id: 3, url: "broken-site.io", baseMs: 0, currentMs: 0, status: "down" },
+  ]);
+
+  // Simulate live ping updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSites(prev => prev.map(site => {
+        if (site.status === "down") return site;
+        // Randomly fluctuate ping by ±15ms
+        const variance = Math.floor(Math.random() * 30) - 15;
+        return { ...site, currentMs: site.baseMs + variance };
+      }));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div
+      className="mt-16 mx-auto max-w-2xl rounded-xl border border-border bg-card shadow-sm overflow-hidden text-left"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+    >
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/20">
+        <div className="flex items-center gap-2">
+          <motion.span 
+            className="h-2 w-2 rounded-full bg-foreground" 
+            animate={{ opacity: [1, 0.3, 1] }} 
+            transition={{ duration: 2, repeat: Infinity }} 
+          />
+          <span className="text-xs font-semibold">Live Monitor Feed</span>
+        </div>
+        <span className="text-[10px] text-muted-foreground">Updating live...</span>
+      </div>
+      <div>
+        {sites.map((site, idx) => (
+          <motion.div 
+            key={site.id} 
+            className="flex items-center justify-between px-5 py-3 border-b border-border last:border-0 bg-background"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 + idx * 0.1, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-2.5">
+              <motion.span 
+                className={`h-2 w-2 rounded-full shrink-0 ${site.status === "up" ? "bg-foreground" : "bg-destructive"}`}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: idx * 0.3 }}
+              />
+              <div>
+                <p className="text-xs font-medium">{site.url}</p>
+                <p className="text-[10px] text-muted-foreground">https://{site.url}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {site.status === "up" && (
+                <motion.span 
+                  key={site.currentMs}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-[11px] text-muted-foreground tabular-nums"
+                >
+                  {site.currentMs}ms
+                </motion.span>
+              )}
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                site.status === "up"
+                  ? "bg-foreground/5 text-foreground border-foreground/20"
+                  : "bg-destructive/10 text-destructive border-destructive/20"
+              }`}>
+                {site.status === "up" ? "Operational" : "Down"}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
 
 
 export default function Landing() {
@@ -48,12 +156,21 @@ export default function Landing() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden border-b border-border">
-        {/* Grid */}
-        <div className="absolute inset-0 -z-10"
-          style={{ backgroundImage: "linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px)", backgroundSize: "48px 48px" }} />
+      <section className="relative overflow-hidden border-b border-border isolate">
+        {/* Typography / ASCII Background */}
+        <div 
+          className="absolute inset-0 z-[-1] flex items-center justify-center overflow-hidden opacity-30 dark:opacity-40 pointer-events-none select-none"
+          style={{ 
+            maskImage: 'radial-gradient(ellipse at center, transparent 35%, black 75%)', 
+            WebkitMaskImage: 'radial-gradient(ellipse at center, transparent 35%, black 75%)' 
+          }}
+        >
+          <pre className="text-[12px] leading-[14px] tracking-[0.2em] font-mono text-muted-foreground whitespace-pre font-bold text-center">
+            {ASCII_WAVE}
+          </pre>
+        </div>
 
-        <div className="mx-auto max-w-4xl px-6 py-24 text-center">
+        <div className="relative z-10 mx-auto max-w-4xl px-6 py-28 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-medium text-foreground mb-6">
               <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
@@ -81,45 +198,7 @@ export default function Landing() {
           </motion.div>
 
           {/* Mock monitor card */}
-          <motion.div
-            className="mt-16 mx-auto max-w-2xl rounded-xl border border-border bg-card shadow-sm overflow-hidden text-left"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-          >
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/40">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-foreground" />
-                <span className="text-xs font-semibold">Live Monitor Feed</span>
-              </div>
-              <span className="text-[10px] text-muted-foreground">Just now</span>
-            </div>
-            {[
-              { url: "google.com", ms: 142, status: "up" as const },
-              { url: "github.com", ms: 210, status: "up" as const },
-              { url: "broken-site.io", ms: 0, status: "down" as const },
-            ].map(({ url, ms, status }) => (
-              <div key={url} className="flex items-center justify-between px-5 py-3 border-b border-border last:border-0">
-                <div className="flex items-center gap-2.5">
-                  <span className={`h-2 w-2 rounded-full shrink-0 ${status === "up" ? "bg-foreground" : "bg-destructive"}`} />
-                  <div>
-                    <p className="text-xs font-medium">{url}</p>
-                    <p className="text-[10px] text-muted-foreground">https://{url}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {ms > 0 && <span className="text-[11px] text-muted-foreground">{ms}ms</span>}
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                    status === "up"
-                      ? "bg-foreground/5 text-foreground border-foreground/20"
-                      : "bg-destructive/10 text-destructive border-destructive/20"
-                  }`}>
-                    {status === "up" ? "Operational" : "Down"}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </motion.div>
+          <LiveMonitorCard />
         </div>
       </section>
 
@@ -145,12 +224,18 @@ export default function Landing() {
       {/* ── FEATURES BENTO GRID ── */}
       <section id="features" className="py-24">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Everything you need to stay online</h2>
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">Everything you need to stay online</h2>
             <p className="text-sm text-muted-foreground max-w-xl mx-auto">
               Built with a real Redis stream queue and PostgreSQL. Solid infrastructure, no magic.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[22rem]">
             {/* 1. Global Monitoring (Span 2) */}
@@ -339,34 +424,145 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="py-20 border-y border-border bg-muted/20">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">How it works</h2>
-            <p className="text-sm text-muted-foreground">Three moving parts. One reliable pipeline.</p>
+      {/* ── HOW IT WORKS (ANIMATED PIPELINE) ── */}
+      <section id="how-it-works" className="py-24 border-y border-border bg-muted/20 overflow-hidden">
+        <div className="mx-auto max-w-5xl px-6">
+          <motion.div 
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">How it works</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              Three moving parts. One reliable pipeline. Watch the data flow in real-time.
+            </p>
+          </motion.div>
+
+          <div className="relative max-w-4xl mx-auto">
+            {/* The Main Pipeline Diagram */}
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4 z-10">
+              
+              {/* Node 1: Producer */}
+              <motion.div 
+                className="relative flex flex-col items-center group w-full md:w-auto"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="h-14 w-14 rounded-2xl border border-border bg-card flex items-center justify-center mb-3 relative z-10 group-hover:border-foreground/50 transition-colors">
+                  <Clock className="h-6 w-6 text-foreground" />
+                  {/* Pulse ring */}
+                  <motion.div className="absolute inset-0 rounded-2xl border border-foreground"
+                    animate={{ scale: [1, 1.4, 1.4], opacity: [0.8, 0, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                  />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-sm font-semibold">1. Producer</h3>
+                  <p className="text-[11px] text-muted-foreground max-w-[120px] mt-1">Fetches targets & pushes jobs every minute</p>
+                </div>
+              </motion.div>
+
+              {/* Connecting Line 1 */}
+              <div className="hidden md:block flex-1 relative h-0.5 bg-border mx-2">
+                <motion.div className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 w-6 rounded-full bg-foreground shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                  animate={{ left: ["0%", "100%"] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+              <div className="md:hidden w-0.5 h-12 bg-border relative">
+                 <motion.div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-6 rounded-full bg-foreground"
+                  animate={{ top: ["0%", "100%"] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+
+              {/* Node 2: Redis */}
+              <motion.div 
+                className="relative flex flex-col items-center group w-full md:w-auto"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <div className="h-14 w-14 rounded-2xl border border-border bg-card flex items-center justify-center mb-3 relative z-10 overflow-hidden group-hover:border-foreground/50 transition-colors">
+                  <Zap className="h-6 w-6 text-foreground relative z-10" />
+                  {/* Internal scrolling stream */}
+                  <div className="absolute inset-0 opacity-10 flex flex-col gap-1 pt-2">
+                     <motion.div className="h-1 w-full bg-foreground" animate={{ x: [-20, 20] }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
+                     <motion.div className="h-1 w-full bg-foreground" animate={{ x: [20, -20] }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
+                     <motion.div className="h-1 w-full bg-foreground" animate={{ x: [-20, 20] }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-sm font-semibold">2. Redis Stream</h3>
+                  <p className="text-[11px] text-muted-foreground max-w-[120px] mt-1">Acts as the fast, reliable job queue</p>
+                </div>
+              </motion.div>
+
+              {/* Connecting Line 2 */}
+              <div className="hidden md:block flex-1 relative h-0.5 bg-border mx-2">
+                <motion.div className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 w-6 rounded-full bg-foreground shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                  animate={{ left: ["0%", "100%"] }}
+                  transition={{ duration: 1.5, delay: 0.75, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+              <div className="md:hidden w-0.5 h-12 bg-border relative">
+                 <motion.div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-6 rounded-full bg-foreground"
+                  animate={{ top: ["0%", "100%"] }}
+                  transition={{ duration: 1.5, delay: 0.75, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
+
+              {/* Node 3: Worker & DB */}
+              <motion.div 
+                className="relative flex flex-col items-center group w-full md:w-auto"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <div className="relative">
+                  <div className="h-14 w-14 rounded-2xl border border-border bg-card flex items-center justify-center mb-3 relative z-10 group-hover:border-foreground/50 transition-colors">
+                    <Activity className="h-6 w-6 text-foreground" />
+                    {/* Activity ping */}
+                    <motion.div className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-foreground"
+                      animate={{ opacity: [1, 0, 1] }}
+                      transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
+                    />
+                  </div>
+                  {/* Database badge attached to worker */}
+                  <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full border border-border bg-muted flex items-center justify-center shadow-lg z-20">
+                    <Shield className="h-3 w-3 text-foreground" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-sm font-semibold">3. Workers & DB</h3>
+                  <p className="text-[11px] text-muted-foreground max-w-[120px] mt-1">Pings URLs, records ms, writes to PostgreSQL</p>
+                </div>
+              </motion.div>
+
+            </div>
+
+            {/* Background connection path for visual styling */}
+            <div className="absolute top-10 left-[10%] right-[10%] h-32 rounded-[2rem] border-t border-x border-border/30 -z-10 hidden md:block" />
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-8">
-            {[
-              { step: "01", title: "Producer pushes jobs", desc: "A cron-style producer fetches all websites from the DB and pushes them to a Redis stream every minute." },
-              { step: "02", title: "Worker consumes checks", desc: "Workers read from the Redis consumer group, ping each URL, measure response time, and ACK the message." },
-              { step: "03", title: "Results stored & shown", desc: "Tick results (status + response time + region) are written to PostgreSQL and shown on your dashboard." },
-            ].map(({ step, title, desc }) => (
-              <div key={step}>
-                <p className="text-5xl font-black text-muted/80 mb-3">{step}</p>
-                <h3 className="text-sm font-semibold mb-2">{title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-20">
+      <section className="py-24 border-t border-border">
         <div className="mx-auto max-w-xl px-6 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">Ready to monitor your websites?</h2>
             <p className="text-sm text-muted-foreground mb-8">
               Create a free account and start seeing real-time uptime checks in under 2 minutes.
