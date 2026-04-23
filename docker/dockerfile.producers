@@ -1,0 +1,16 @@
+FROM bun/oven:1
+
+WORKDIR /src/producer
+
+COPY ./packages ./packages
+COPY ./bun/lock ./bun/lock
+
+COPY ./packages.json ./packages.json
+COPY ./turbo.json ./turbo.json
+
+COPY ./apps/producer ./apps/producer
+
+RUN bun run dev
+
+CMD ["bun" ,"run" , "dev"]
+
