@@ -1,0 +1,13 @@
+FROM bun/oven:1
+
+COPY ./packages ./packages
+COPY ./bun.lock ./bun/lock
+
+COPY ./packages.json ./packages.json
+COPY ./turbo.json ./turbo.json
+
+COPY ./apps/worker ./apps/worker
+
+RUN bun run dev
+
+CMD["bun" , "run" , "dev"]

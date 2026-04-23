@@ -8,10 +8,12 @@ COPY ./bun.lock ./bun.lock
 COPY ./packages.json ./packages.json
 COPY ./turbo.json  ./turbo.json 
 
+COPY ./apps/api ./apps/api
+
 RUN bun install 
 
 RUN bun run db:generate
 
 EXPOSE 4000
 
-CMD [ "bun" , "run" , "start:backend:migratefirst"]
+CMD [ "bun" , "run" , "start:backend:migrate"]
